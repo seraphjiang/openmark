@@ -1,0 +1,228 @@
+:root {
+  --om-bg: #ffffff;
+  --om-text: #24292f;
+  --om-link: #0969da;
+  --om-border: #d0d7de;
+  --om-code-bg: #f6f8fa;
+  --om-blockquote: #656d76;
+  --om-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --om-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --om-max-width: 900px;
+  --om-font-size: 16px;
+  --om-line-height: 1.6;
+}
+
+[data-theme="dark"] {
+  --om-bg: #0d1117;
+  --om-text: #e6edf3;
+  --om-link: #58a6ff;
+  --om-border: #30363d;
+  --om-code-bg: #161b22;
+  --om-blockquote: #8b949e;
+}
+
+.openmark-body {
+  font-family: var(--om-font);
+  font-size: var(--om-font-size);
+  line-height: var(--om-line-height);
+  color: var(--om-text);
+  background: var(--om-bg);
+  margin: 0;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.openmark-content {
+  max-width: var(--om-max-width);
+  width: 100%;
+}
+
+.openmark-content h1,
+.openmark-content h2,
+.openmark-content h3,
+.openmark-content h4,
+.openmark-content h5,
+.openmark-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.openmark-content h1 { font-size: 2em; border-bottom: 1px solid var(--om-border); padding-bottom: 0.3em; }
+.openmark-content h2 { font-size: 1.5em; border-bottom: 1px solid var(--om-border); padding-bottom: 0.3em; }
+.openmark-content h3 { font-size: 1.25em; }
+
+.openmark-content p { margin: 1em 0; }
+
+.openmark-content a { color: var(--om-link); text-decoration: none; }
+.openmark-content a:hover { text-decoration: underline; }
+
+.openmark-content code {
+  font-family: var(--om-mono);
+  background: var(--om-code-bg);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+.openmark-content pre {
+  background: var(--om-code-bg);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.openmark-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.openmark-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--om-border);
+  color: var(--om-blockquote);
+}
+
+.openmark-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.openmark-content th,
+.openmark-content td {
+  border: 1px solid var(--om-border);
+  padding: 0.5em 1em;
+  text-align: left;
+}
+
+.openmark-content th {
+  background: var(--om-code-bg);
+  font-weight: 600;
+}
+
+.openmark-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.openmark-content ul,
+.openmark-content ol {
+  padding-left: 2em;
+  margin: 1em 0;
+}
+
+.openmark-content hr {
+  border: none;
+  border-top: 1px solid var(--om-border);
+  margin: 2em 0;
+}
+
+.openmark-content .katex-block {
+  overflow-x: auto;
+  padding: 1em 0;
+  text-align: center;
+}
+
+.openmark-content .mermaid {
+  text-align: center;
+  margin: 1em 0;
+}
+
+.openmark-content .mermaid-error {
+  color: #d73a49;
+  border: 1px dashed #d73a49;
+  padding: 1em;
+  border-radius: 4px;
+}
+
+/* Table of Contents */
+.openmark-toc {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  width: 250px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.openmark-toc-header {
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  color: var(--om-text);
+}
+
+.openmark-toc ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.openmark-toc li {
+  margin: 0.25em 0;
+}
+
+.openmark-toc .toc-level-1 { padding-left: 0; }
+.openmark-toc .toc-level-2 { padding-left: 1em; }
+.openmark-toc .toc-level-3 { padding-left: 2em; }
+.openmark-toc .toc-level-4 { padding-left: 3em; }
+
+.openmark-toc a {
+  color: var(--om-blockquote);
+  text-decoration: none;
+  display: block;
+  padding: 0.15em 0.5em;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.openmark-toc a:hover {
+  color: var(--om-text);
+}
+
+.openmark-toc a.active {
+  color: var(--om-link);
+  background: var(--om-code-bg);
+}
+
+/* Lightbox */
+.openmark-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  cursor: pointer;
+}
+
+.openmark-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  .openmark-body {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .openmark-toc {
+    position: static;
+    width: 100%;
+    max-height: none;
+    border-bottom: 1px solid var(--om-border);
+    padding-bottom: 1em;
+    margin-bottom: 1em;
+  }
+}

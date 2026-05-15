@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 280px;
+      padding: 16px;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      margin: 0;
+    }
+    h1 {
+      font-size: 18px;
+      margin: 0 0 12px 0;
+    }
+    .setting {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+    }
+    select, input[type="range"] {
+      width: 120px;
+    }
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 12px;
+      color: #666;
+    }
+    a {
+      color: #0969da;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>OpenMark</h1>
+  <div class="setting">
+    <label>Theme</label>
+    <select id="theme">
+      <option value="auto">Auto</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  </div>
+  <div class="setting">
+    <label>Font Size</label>
+    <input type="range" id="fontSize" min="12" max="24" step="1">
+  </div>
+  <div class="setting">
+    <label>TOC</label>
+    <input type="checkbox" id="showToc" checked>
+  </div>
+  <div class="footer">
+    <a href="options.html" target="_blank">All Settings</a>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
