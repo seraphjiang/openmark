@@ -6,17 +6,16 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    target: "esnext",
+    lib: {
+      entry: resolve(__dirname, "src/content/index.ts"),
+      name: "openmark",
+      formats: ["iife"],
+      fileName: () => "content.js",
+    },
     rollupOptions: {
-      input: {
-        content: resolve(__dirname, "src/content/index.ts"),
-        background: resolve(__dirname, "src/background/index.ts"),
-        popup: resolve(__dirname, "src/popup/index.ts"),
-        options: resolve(__dirname, "src/options/index.ts"),
-      },
       output: {
-        entryFileNames: "[name].js",
-        chunkFileNames: "chunks/[name].js",
-        assetFileNames: "assets/[name].[ext]",
+        inlineDynamicImports: true,
       },
     },
   },
@@ -26,6 +25,7 @@ export default defineConfig({
         { src: "public/*", dest: "." },
         { src: "src/popup/popup.html", dest: "." },
         { src: "src/options/options.html", dest: "." },
+        { src: "src/content/styles/main.css", dest: "assets", rename: "content.css" },
       ],
     }),
   ],

@@ -3,7 +3,6 @@ import { initRenderer, renderMarkdown, renderMermaidDiagrams } from "./renderer"
 import { generateToc } from "./toc";
 import { initLightbox } from "./lightbox";
 import { Settings } from "../shared/types";
-import "./styles/main.css";
 
 function isMarkdownContent(): boolean {
   const url = window.location.href;

@@ -13,6 +13,7 @@
     {
       "matches": ["file:///*/*.md", "file:///*/*.markdown", "*://*/*.md", "*://*/*.markdown"],
       "js": ["content.js"],
+      "css": ["assets/content.css"],
       "run_at": "document_end"
     }
   ],
