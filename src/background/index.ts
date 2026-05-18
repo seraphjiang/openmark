@@ -40,10 +40,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     const dirUrl = message.url.endsWith("/") ? message.url : message.url + "/";
     fetch(dirUrl)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
-      })
+      .then((r) => r.text())
       .then((html) => {
         const entries = parseDirectoryListing(html);
         sendResponse({ ok: true, entries });
