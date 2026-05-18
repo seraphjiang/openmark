@@ -1,8 +1,19 @@
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
-import mermaid from "mermaid";
 import katex from "katex";
 import { Settings } from "../shared/types";
+
+// mermaid is dynamically imported so it ends up in its own chunk,
+// keeping content.js lean and free of Unicode data tables that
+// trigger Chrome Web Store false-positive encoding errors.
+let mermaidInstance: typeof import("mermaid")["default"] | null = null;
+
+async function getMermaid(): Promise<typeof import("mermaid")["default"]> {
+  if (mermaidInstance) return mermaidInstance;
+  const mod = await import("mermaid");
+  mermaidInstance = mod.default;
+  return mermaidInstance;
+}
 
 let md: MarkdownIt;
 
@@ -129,9 +140,11 @@ export function initRenderer(settings: Settings): void {
   md = createMarkdownIt(settings);
 
   if (settings.enableMermaid) {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: settings.theme === "dark" ? "dark" : "default",
+    getMermaid().then((mermaid) => {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: settings.theme === "dark" ? "dark" : "default",
+      });
     });
   }
 }
@@ -142,6 +155,8 @@ export function renderMarkdown(source: string): string {
 
 export async function renderMermaidDiagrams(): Promise<void> {
   const elements = document.querySelectorAll<HTMLElement>(".mermaid");
+  if (elements.length === 0) return;
+  const mermaid = await getMermaid();
   for (const el of elements) {
     if (el.dataset.processed) continue;
     try {
