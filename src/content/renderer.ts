@@ -3,33 +3,27 @@ import hljs from "highlight.js";
 import katex from "katex";
 import { Settings } from "../shared/types";
 
-// mermaid-bundle.js is a separate IIFE bundle (web_accessible_resource).
-// Injecting it via chrome.runtime.getURL satisfies the page's CSP
-// (chrome-extension:// is always allowed) while keeping the main
-// content.js free of the Unicode data tables that trigger CWS
-// false-positive UTF-8 encoding errors.
-let mermaidInstance: any = null;
+let mermaidReadyPromise: Promise<void> | null = null;
 
 function injectMermaidScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
+  if (mermaidReadyPromise) return mermaidReadyPromise;
+  mermaidReadyPromise = new Promise((resolve, reject) => {
     const src = chrome.runtime.getURL("mermaid-bundle.js");
     if (document.querySelector(`script[src="${src}"]`)) {
       resolve();
       return;
     }
+    window.addEventListener("openmark-mermaid-ready", () => resolve(), { once: true });
     const script = document.createElement("script");
     script.src = src;
-    script.onload = () => resolve();
     script.onerror = reject;
     document.head.appendChild(script);
   });
+  return mermaidReadyPromise;
 }
 
-async function getMermaid(): Promise<any> {
-  if (mermaidInstance) return mermaidInstance;
-  await injectMermaidScript();
-  mermaidInstance = (window as any).mermaid;
-  return mermaidInstance;
+function ensureMermaidReady(): Promise<void> {
+  return injectMermaidScript();
 }
 
 let md: MarkdownIt;
@@ -153,16 +147,14 @@ function addMermaidPlugin(instance: MarkdownIt): void {
   };
 }
 
+let mermaidTheme: string = "default";
+
 export function initRenderer(settings: Settings): void {
   md = createMarkdownIt(settings);
+  mermaidTheme = settings.theme === "dark" ? "dark" : "default";
 
   if (settings.enableMermaid) {
-    getMermaid().then((mermaid) => {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: settings.theme === "dark" ? "dark" : "default",
-      });
-    });
+    ensureMermaidReady();
   }
 }
 
@@ -173,18 +165,13 @@ export function renderMarkdown(source: string): string {
 export async function renderMermaidDiagrams(): Promise<void> {
   const elements = document.querySelectorAll<HTMLElement>(".mermaid");
   if (elements.length === 0) return;
-  const mermaid = await getMermaid();
-  for (const el of elements) {
-    if (el.dataset.processed) continue;
-    try {
-      const { svg } = await mermaid.render(
-        `mermaid-${Math.random().toString(36).slice(2)}`,
-        el.textContent || "",
-      );
-      el.innerHTML = svg;
-      el.dataset.processed = "true";
-    } catch {
-      el.classList.add("mermaid-error");
-    }
-  }
+
+  await ensureMermaidReady();
+
+  return new Promise((resolve) => {
+    window.addEventListener("openmark-mermaid-done", () => resolve(), { once: true });
+    window.dispatchEvent(new CustomEvent("openmark-render-mermaid", {
+      detail: { theme: mermaidTheme },
+    }));
+  });
 }

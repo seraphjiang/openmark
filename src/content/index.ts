@@ -5,11 +5,15 @@ import { initLightbox } from "./lightbox";
 import { Settings } from "../shared/types";
 
 function isMarkdownContent(): boolean {
+  const contentType = document.contentType;
+
+  if (contentType === "text/markdown" || contentType === "text/x-markdown") return true;
+
+  // Already-rendered HTML (GitHub, GitLab, CMS platforms) — do not hijack
+  if (contentType === "text/html") return false;
+
   const url = window.location.href;
   if (/\.(md|markdown)(\?.*)?$/i.test(url)) return true;
-
-  const contentType = document.contentType;
-  if (contentType === "text/markdown" || contentType === "text/x-markdown") return true;
 
   return false;
 }
@@ -67,9 +71,9 @@ async function render(): Promise<void> {
 }
 
 let lastContent = "";
+let refreshTimer: ReturnType<typeof setInterval> | null = null;
+
 function readFileContent(url: string): Promise<string> {
-  // Both fetch() and XHR are blocked by CORS on file:// pages (null origin).
-  // Proxy through the background service worker which has file:// permissions.
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: "FETCH_FILE", url }, (response) => {
       if (chrome.runtime.lastError) {
@@ -84,11 +88,14 @@ function readFileContent(url: string): Promise<string> {
 }
 
 function startAutoRefresh(interval: number): void {
-  setInterval(async () => {
+  if (refreshTimer !== null) return;
+  refreshTimer = setInterval(async () => {
     try {
       const text = await readFileContent(window.location.href);
       if (text !== lastContent) {
         lastContent = text;
+        refreshTimer && clearInterval(refreshTimer);
+        refreshTimer = null;
         await render();
       }
     } catch {

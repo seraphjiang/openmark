@@ -19,12 +19,20 @@ chrome.action.onClicked.addListener(async (tab) => {
 // Content scripts running on file:// pages have null origin and cannot
 // fetch file:// URLs directly. The background service worker has
 // host_permissions for file:// and can fetch on their behalf.
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "FETCH_FILE" && typeof message.url === "string") {
+    if (sender.id !== chrome.runtime.id) {
+      sendResponse({ ok: false, error: "Unauthorized sender" });
+      return true;
+    }
+    if (!message.url.startsWith("file://")) {
+      sendResponse({ ok: false, error: "Only file:// URLs allowed" });
+      return true;
+    }
     fetch(message.url)
       .then((r) => r.text())
       .then((text) => sendResponse({ ok: true, text }))
       .catch((err) => sendResponse({ ok: false, error: String(err) }));
-    return true; // keep channel open for async response
+    return true;
   }
 });

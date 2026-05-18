@@ -6,16 +6,23 @@ export function initLightbox(container: HTMLElement): void {
     const img = target as HTMLImageElement;
     const overlay = document.createElement("div");
     overlay.className = "openmark-lightbox";
-    overlay.innerHTML = `<img src="${img.src}" alt="${img.alt || ""}">`;
-    overlay.addEventListener("click", () => overlay.remove());
 
-    document.addEventListener("keydown", function handler(ev) {
-      if (ev.key === "Escape") {
-        overlay.remove();
-        document.removeEventListener("keydown", handler);
-      }
-    });
+    const fullImg = document.createElement("img");
+    fullImg.src = img.src;
+    fullImg.alt = img.alt || "";
+    overlay.appendChild(fullImg);
 
+    function close() {
+      overlay.remove();
+      document.removeEventListener("keydown", handler);
+    }
+
+    function handler(ev: KeyboardEvent) {
+      if (ev.key === "Escape") close();
+    }
+
+    overlay.addEventListener("click", close);
+    document.addEventListener("keydown", handler);
     document.body.appendChild(overlay);
   });
 }
