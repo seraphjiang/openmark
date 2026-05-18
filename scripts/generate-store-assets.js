@@ -250,19 +250,46 @@ function drawScreenshot1() {
   ctx.font = '12px sans-serif';
   ctx.fillText('Send', 1218, h - 38);
 
-  // Toggle buttons on right edge
+  // Right panel - more chat messages to fill space
+  ctx.fillStyle = c.link;
+  roundRect(ctx, 1050, 180, 200, 40, 8);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('Summarize the key features', 1062, 204);
+
+  ctx.fillStyle = '#1f2937';
+  roundRect(ctx, 975, 230, 240, 80, 8);
+  ctx.fill();
+  ctx.fillStyle = c.text;
+  ctx.font = '11px sans-serif';
+  ctx.fillText('Key features include:', 987, 250);
+  ctx.fillText('• Syntax highlighting (180+ langs)', 987, 268);
+  ctx.fillText('• Mermaid diagrams', 987, 286);
+  ctx.fillText('• KaTeX math rendering', 987, 304);
+
+  ctx.fillStyle = c.link;
+  roundRect(ctx, 1080, 330, 170, 34, 8);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillText('What about the table?', 1092, 351);
+
+  ctx.fillStyle = '#1f2937';
+  roundRect(ctx, 975, 374, 240, 60, 8);
+  ctx.fill();
+  ctx.fillStyle = c.text;
+  ctx.fillText('The table shows feature status:', 987, 394);
+  ctx.fillText('all three features are marked as', 987, 412);
+  ctx.fillText('complete with green checkmarks.', 987, 430);
+
+  // AI Settings toggle at top of right panel
   ctx.fillStyle = c.codeBg;
   ctx.strokeStyle = c.border;
-  roundRect(ctx, w - 20, h / 2 - 30, 20, 24, 3);
+  roundRect(ctx, 975, 460, 270, 24, 4);
   ctx.fill(); ctx.stroke();
-  ctx.fillStyle = c.text;
-  ctx.font = '12px sans-serif';
-  ctx.fillText('☰', w - 16, h / 2 - 14);
-
-  roundRect(ctx, w - 20, h / 2 + 5, 20, 24, 3);
-  ctx.fill();
-  ctx.fillStyle = c.link;
-  ctx.fillText('✎', w - 16, h / 2 + 21);
+  ctx.fillStyle = c.muted;
+  ctx.font = '11px sans-serif';
+  ctx.fillText('⚙ AI Settings — GPT-4o Mini', 987, 476);
 
   // URL bar
   ctx.fillStyle = '#1c2128';
@@ -606,6 +633,73 @@ function drawScreenshot3() {
     ctx.fill();
     ty += barH + 4;
   }
+
+  // State diagram section (fill lower area)
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText('State Diagram', 80, 570);
+
+  ctx.strokeStyle = c.link;
+  ctx.lineWidth = 2;
+  const states = [
+    { x: 120, y: 600, label: 'Idle' },
+    { x: 260, y: 600, label: 'Detecting' },
+    { x: 420, y: 600, label: 'Rendering' },
+    { x: 580, y: 600, label: 'Displayed' },
+  ];
+  for (const s of states) {
+    roundRect(ctx, s.x, s.y, 90, 30, 15);
+    ctx.stroke();
+    ctx.fillStyle = c.text;
+    ctx.font = '11px sans-serif';
+    ctx.fillText(s.label, s.x + 15, s.y + 19);
+  }
+  // Arrows between states
+  ctx.strokeStyle = c.muted;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(210, 615); ctx.lineTo(260, 615); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(350, 615); ctx.lineTo(420, 615); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(510, 615); ctx.lineTo(580, 615); ctx.stroke();
+
+  // Class diagram (fill right lower area)
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 18px sans-serif';
+  ctx.fillText('Class Diagram', 500, 570);
+
+  ctx.strokeStyle = c.border;
+  ctx.lineWidth = 1;
+  // Settings class
+  roundRect(ctx, 740, 590, 160, 90, 4);
+  ctx.stroke();
+  ctx.fillStyle = c.codeBg;
+  ctx.fillRect(741, 591, 158, 20);
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('Settings', 790, 605);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = c.muted;
+  ctx.fillText('+theme: string', 752, 625);
+  ctx.fillText('+fontSize: number', 752, 640);
+  ctx.fillText('+enableMermaid: bool', 752, 655);
+  ctx.fillText('+showToc: boolean', 752, 670);
+
+  // Renderer class
+  roundRect(ctx, 950, 590, 160, 90, 4);
+  ctx.stroke();
+  ctx.fillStyle = c.codeBg;
+  ctx.fillRect(951, 591, 158, 20);
+  ctx.fillStyle = c.text;
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('Renderer', 1000, 605);
+  ctx.font = '10px sans-serif';
+  ctx.fillStyle = c.muted;
+  ctx.fillText('+initRenderer()', 962, 625);
+  ctx.fillText('+renderMarkdown()', 962, 640);
+  ctx.fillText('+renderMermaid()', 962, 655);
+
+  // Arrow between classes
+  ctx.strokeStyle = c.link;
+  ctx.beginPath(); ctx.moveTo(900, 635); ctx.lineTo(950, 635); ctx.stroke();
 
   // Light theme badge
   ctx.fillStyle = c.codeBg;
