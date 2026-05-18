@@ -197,26 +197,24 @@ function initEditor(source: string): void {
 function saveFile(): void {
   const textarea = layout.centerEditor.querySelector<HTMLTextAreaElement>(".editor-textarea");
   const status = layout.centerEditor.querySelector<HTMLElement>(".editor-status");
-  if (!textarea || !isLocal) return;
+  if (!textarea) return;
 
   const content = textarea.value;
-  chrome.runtime.sendMessage(
-    { type: "SAVE_FILE", url: currentFileUrl, content },
-    (response) => {
-      if (response?.ok) {
-        lastContent = content;
-        if (status) {
-          status.textContent = "Saved";
-          setTimeout(() => { status.textContent = ""; }, 1500);
-        }
-      } else {
-        if (status) {
-          status.textContent = "Save failed: " + (response?.error || "unknown");
-          setTimeout(() => { status.textContent = ""; }, 3000);
-        }
-      }
-    },
-  );
+  lastContent = content;
+
+  const blob = new Blob([content], { type: "text/markdown" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const fileName = currentFileUrl.split("/").pop() || "document.md";
+  a.download = decodeURIComponent(fileName);
+  a.click();
+  URL.revokeObjectURL(url);
+
+  if (status) {
+    status.textContent = "Downloaded";
+    setTimeout(() => { status.textContent = ""; }, 1500);
+  }
 }
 
 async function onSettingsChange(): Promise<void> {

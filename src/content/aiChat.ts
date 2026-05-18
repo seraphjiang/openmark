@@ -1,4 +1,4 @@
-import { AiConfig, AiProvider, AiAuthMode } from "../shared/types";
+import { AiProvider } from "../shared/types";
 import { getSettings, saveSettings } from "../shared/storage";
 
 interface ChatMessage {
@@ -90,48 +90,19 @@ async function buildConfigUI(container: HTMLElement): Promise<void> {
     return sel;
   }));
 
-  // Auth mode
-  container.appendChild(createField("Auth Mode", () => {
-    const sel = document.createElement("select");
-    const modes: { value: AiAuthMode; label: string }[] = [
-      { value: "session", label: "Browser Session (no key needed)" },
-      { value: "apikey", label: "API Key" },
-    ];
-    for (const m of modes) {
-      const opt = document.createElement("option");
-      opt.value = m.value;
-      opt.textContent = m.label;
-      if (m.value === config.authMode) opt.selected = true;
-      sel.appendChild(opt);
-    }
-    sel.addEventListener("change", async () => {
+  // API Key
+  container.appendChild(createField("API Key", () => {
+    const input = document.createElement("input");
+    input.type = "password";
+    input.className = "chat-key-input";
+    input.value = config.apiKey;
+    input.placeholder = "Enter your API key";
+    input.addEventListener("change", async () => {
       const current = (await getSettings()).aiConfig;
-      await saveSettings({ aiConfig: { ...current, authMode: sel.value as AiAuthMode } });
-      buildConfigUI(container);
+      await saveSettings({ aiConfig: { ...current, apiKey: input.value } });
     });
-    return sel;
+    return input;
   }));
-
-  // API Key (only if apikey mode)
-  if (config.authMode === "apikey") {
-    container.appendChild(createField("API Key", () => {
-      const input = document.createElement("input");
-      input.type = "password";
-      input.className = "chat-key-input";
-      input.value = config.apiKey;
-      input.placeholder = "Enter your API key";
-      input.addEventListener("change", async () => {
-        const current = (await getSettings()).aiConfig;
-        await saveSettings({ aiConfig: { ...current, apiKey: input.value } });
-      });
-      return input;
-    }));
-  } else {
-    const hint = document.createElement("div");
-    hint.className = "chat-session-hint";
-    hint.textContent = getSessionHint(config.provider);
-    container.appendChild(hint);
-  }
 
   // Model
   container.appendChild(createField("Model", () => {
@@ -160,14 +131,6 @@ function createField(label: string, buildControl: () => HTMLElement): HTMLElemen
   field.appendChild(lbl);
   field.appendChild(buildControl());
   return field;
-}
-
-function getSessionHint(provider: AiProvider): string {
-  switch (provider) {
-    case "openai": return "Log in to chatgpt.com in this browser first.";
-    case "gemini": return "Log in to gemini.google.com in this browser first.";
-    case "deepseek": return "Log in to chat.deepseek.com in this browser first.";
-  }
 }
 
 function getDefaultModel(provider: AiProvider): string {
@@ -210,10 +173,10 @@ async function sendMessage(): Promise<void> {
   if (!text) return;
 
   const settings = await getSettings();
-  const { apiKey, provider, model, authMode } = settings.aiConfig;
+  const { apiKey, provider, model } = settings.aiConfig;
 
-  if (authMode === "apikey" && !apiKey) {
-    appendMessage("assistant", "Please set your API key in AI Settings above.");
+  if (!apiKey) {
+    appendMessage("assistant", "Please set your API key in AI Settings (⚙) above.");
     return;
   }
 
@@ -224,9 +187,7 @@ async function sendMessage(): Promise<void> {
   sendBtn.classList.add("disabled");
 
   try {
-    const reply = authMode === "session"
-      ? await callAiSession(provider, model, messages)
-      : await callAiKey(provider, apiKey, model, messages);
+    const reply = await callAiKey(provider, apiKey, model, messages);
     messages.push({ role: "assistant", content: reply });
     appendMessage("assistant", reply);
   } catch (err: any) {
@@ -245,30 +206,6 @@ function appendMessage(role: "user" | "assistant", content: string): void {
   chatListEl.appendChild(msg);
   chatListEl.scrollTop = chatListEl.scrollHeight;
 }
-
-// === Session-based auth (via background worker for cookie access) ===
-
-async function callAiSession(provider: AiProvider, model: string, msgs: ChatMessage[]): Promise<string> {
-  const docContext = getDocumentContext();
-  const systemMsg = `You are a helpful assistant. The user is reading the following document:\n\n${docContext}\n\nAnswer questions about this document concisely.`;
-
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(
-      { type: "AI_CHAT_SESSION", provider, model, systemMsg, messages: msgs },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else if (response?.ok) {
-          resolve(response.reply);
-        } else {
-          reject(new Error(response?.error || "Session request failed"));
-        }
-      },
-    );
-  });
-}
-
-// === API key auth (direct from content script) ===
 
 async function callAiKey(provider: AiProvider, apiKey: string, model: string, msgs: ChatMessage[]): Promise<string> {
   const docContext = getDocumentContext();
