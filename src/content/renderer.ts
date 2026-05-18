@@ -1,30 +1,8 @@
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 import katex from "katex";
+import mermaid from "mermaid";
 import { Settings } from "../shared/types";
-
-let mermaidReadyPromise: Promise<void> | null = null;
-
-function injectMermaidScript(): Promise<void> {
-  if (mermaidReadyPromise) return mermaidReadyPromise;
-  mermaidReadyPromise = new Promise((resolve, reject) => {
-    const src = chrome.runtime.getURL("mermaid-bundle.js");
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
-      return;
-    }
-    window.addEventListener("openmark-mermaid-ready", () => resolve(), { once: true });
-    const script = document.createElement("script");
-    script.src = src;
-    script.onerror = reject;
-    document.head.appendChild(script);
-  });
-  return mermaidReadyPromise;
-}
-
-function ensureMermaidReady(): Promise<void> {
-  return injectMermaidScript();
-}
 
 let md: MarkdownIt;
 
@@ -147,14 +125,14 @@ function addMermaidPlugin(instance: MarkdownIt): void {
   };
 }
 
-let mermaidTheme: string = "default";
+let mermaidTheme: "dark" | "default" = "default";
 
 export function initRenderer(settings: Settings): void {
   md = createMarkdownIt(settings);
   mermaidTheme = settings.theme === "dark" ? "dark" : "default";
 
   if (settings.enableMermaid) {
-    ensureMermaidReady();
+    mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });
   }
 }
 
@@ -166,12 +144,17 @@ export async function renderMermaidDiagrams(): Promise<void> {
   const elements = document.querySelectorAll<HTMLElement>(".mermaid");
   if (elements.length === 0) return;
 
-  await ensureMermaidReady();
-
-  return new Promise((resolve) => {
-    window.addEventListener("openmark-mermaid-done", () => resolve(), { once: true });
-    window.dispatchEvent(new CustomEvent("openmark-render-mermaid", {
-      detail: { theme: mermaidTheme },
-    }));
-  });
+  for (const el of elements) {
+    if (el.dataset.processed) continue;
+    try {
+      const { svg } = await mermaid.render(
+        `mermaid-${Math.random().toString(36).slice(2)}`,
+        el.textContent || "",
+      );
+      el.innerHTML = svg;
+      el.dataset.processed = "true";
+    } catch {
+      el.classList.add("mermaid-error");
+    }
+  }
 }

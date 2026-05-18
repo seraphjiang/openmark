@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "tsc --noEmit && vite build && vite build --config vite.config.mermaid.ts && python3 scripts/ascii-escape-content.py && vite build --config vite.config.pages.ts",
+    "build": "tsc --noEmit && vite build && python3 scripts/ascii-escape-content.py && vite build --config vite.config.pages.ts",
     "preview": "vite preview"
   },
   "devDependencies": {

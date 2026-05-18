@@ -9,7 +9,7 @@ import os
 
 dist = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dist")
 
-for filename in ["content.js", "mermaid-bundle.js"]:
+for filename in ["content.js"]:
     path = os.path.join(dist, filename)
     if not os.path.exists(path):
         print(f"ascii-escape: {filename} not found, skipping")
