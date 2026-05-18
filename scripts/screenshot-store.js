@@ -8,7 +8,7 @@ const outputDir = resolve(__dirname, '..', 'store-assets');
 
 const pages = [
   { file: 'screenshot-1.html', output: 'screenshot-1.png', width: 1280, height: 800, wait: 3000 },
-  { file: 'screenshot-2.html', output: 'screenshot-2.png', width: 1280, height: 800, wait: 2000 },
+  { file: 'screenshot-2.html', output: 'screenshot-2.png', width: 1280, height: 800, wait: 5000 },
   { file: 'screenshot-3.html', output: 'screenshot-3.png', width: 1280, height: 800, wait: 4000 },
   { file: 'promo-small.html', output: 'small-promo-440x280.png', width: 440, height: 280, wait: 2000 },
   { file: 'promo-marquee.html', output: 'marquee-promo-1400x560.png', width: 1400, height: 560, wait: 2000 },
