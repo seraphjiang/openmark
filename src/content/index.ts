@@ -5,7 +5,7 @@ import { initLightbox } from "./lightbox";
 import { createLayout, LayoutElements } from "./layout";
 import { initResizer } from "./resizer";
 import { initExplorer, setCurrentFile } from "./fileExplorer";
-import { initFlyout } from "./flyoutMenu";
+import { initRightPanel } from "./flyoutMenu";
 import { Settings } from "../shared/types";
 
 function isMarkdownContent(): boolean {
@@ -77,16 +77,11 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
 
   initLightbox(content);
 
-  // Rebuild TOC
-  layout.left.innerHTML = "";
+  // Rebuild outline/TOC in left panel
+  layout.leftOutline.innerHTML = "";
   if (settings.showToc) {
     const toc = generateToc(content);
-    layout.left.appendChild(toc);
-    layout.left.style.display = "";
-    layout.leftHandle.style.display = "";
-  } else {
-    layout.left.style.display = "none";
-    layout.leftHandle.style.display = "none";
+    layout.leftOutline.appendChild(toc);
   }
 }
 
@@ -148,8 +143,11 @@ async function init(): Promise<void> {
   const localState = await getLocalState();
   currentFileUrl = window.location.href;
 
+  // Save original text before we replace DOM
+  const originalText = document.body.innerText || document.body.textContent || "";
+
   // Build layout
-  layout = createLayout(isLocal && currentSettings.showExplorer);
+  layout = createLayout(isLocal);
 
   document.body.innerHTML = "";
   document.body.className = "openmark-body";
@@ -157,10 +155,10 @@ async function init(): Promise<void> {
   document.body.appendChild(layout.root);
 
   // Apply saved panel widths
-  layout.left.style.width = localState.tocWidth + "px";
-  if (isLocal && currentSettings.showExplorer) {
-    layout.right.style.width = localState.explorerWidth + "px";
+  if (isLocal) {
+    layout.left.style.width = localState.tocWidth + "px";
   }
+  layout.right.style.width = localState.explorerWidth + "px";
 
   // Get initial content
   let source: string;
@@ -168,33 +166,35 @@ async function init(): Promise<void> {
     try {
       source = await readFileContent(currentFileUrl);
     } catch {
-      source = document.body.innerText || document.body.textContent || "";
+      source = originalText;
     }
   } else {
-    source = document.body.innerText || document.body.textContent || "";
+    source = originalText;
   }
   lastContent = source;
 
   // Render content
   await renderContent(source, currentSettings);
 
-  // Init file explorer (file:// only)
-  if (isLocal && currentSettings.showExplorer) {
+  // Init file explorer in left panel (file:// only)
+  if (isLocal) {
     const rootUrl = localState.explorerRoot || getParentDir(currentFileUrl);
     await saveLocalState({ explorerRoot: rootUrl });
-    await initExplorer(layout.right, rootUrl, currentFileUrl, onFileSelect);
+    await initExplorer(layout.leftExplorer, rootUrl, currentFileUrl, onFileSelect);
+  } else {
+    // For remote: left panel is just the TOC, hide explorer section
+    layout.leftExplorer.style.display = "none";
+    layout.leftSplitHandle.style.display = "none";
   }
 
-  // Init flyout menu
-  initFlyout(layout.flyout, currentSettings, onSettingsChange);
+  // Init right panel (tabbed menu)
+  initRightPanel(layout.right, currentSettings, onSettingsChange);
 
   // Init resizers
-  if (currentSettings.showToc) {
+  if (isLocal) {
     initResizer(layout.leftHandle, layout.left, "left", "tocWidth");
   }
-  if (isLocal && currentSettings.showExplorer) {
-    initResizer(layout.rightHandle, layout.right, "right", "explorerWidth");
-  }
+  initResizer(layout.rightHandle, layout.right, "right", "explorerWidth");
 
   // Auto-refresh (file:// only)
   if (isLocal && currentSettings.autoRefresh) {
@@ -203,10 +203,5 @@ async function init(): Promise<void> {
 }
 
 if (isMarkdownContent()) {
-  // Save original text before DOM manipulation for non-file pages
-  const originalText = document.body.innerText || document.body.textContent || "";
-  if (!isLocal) {
-    lastContent = originalText;
-  }
   init();
 }
