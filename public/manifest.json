@@ -21,7 +21,7 @@
   "web_accessible_resources": [
     {
       "resources": ["chunks/*.js"],
-      "matches": ["file:///*/*.md", "file:///*/*.markdown", "*://*/*.md", "*://*/*.markdown"]
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
