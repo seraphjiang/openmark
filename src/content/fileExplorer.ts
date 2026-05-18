@@ -142,15 +142,22 @@ async function renderTree(): Promise<void> {
   treeContainer.innerHTML = "";
   try {
     const entries = await listDirectory(state.rootUrl);
+    if (entries.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "explorer-error";
+      empty.textContent = "Empty directory";
+      treeContainer.appendChild(empty);
+      return;
+    }
     const fragment = document.createDocumentFragment();
     for (const entry of entries) {
       fragment.appendChild(createEntryEl(entry, state.rootUrl));
     }
     treeContainer.appendChild(fragment);
-  } catch {
+  } catch (e: any) {
     const err = document.createElement("div");
     err.className = "explorer-error";
-    err.textContent = "Failed to load directory";
+    err.textContent = "Failed to load: " + (e?.message || "unknown error");
     treeContainer.appendChild(err);
   }
 }

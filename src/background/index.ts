@@ -40,7 +40,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     const dirUrl = message.url.endsWith("/") ? message.url : message.url + "/";
     fetch(dirUrl)
-      .then((r) => r.text())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
       .then((html) => {
         const entries = parseDirectoryListing(html);
         sendResponse({ ok: true, entries });
@@ -54,17 +57,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 function parseDirectoryListing(html: string): { name: string; isDirectory: boolean }[] {
   const entries: { name: string; isDirectory: boolean }[] = [];
-  const linkRegex = /<a[^>]+href="([^"]+)"[^>]*>([^<]*)<\/a>/gi;
+
+  // Chrome uses addRow(filename, url, isdir, size, date) in its directory listing
+  const addRowRegex = /addRow\("([^"]+)","([^"]*)",(\d)/g;
   let match;
-  while ((match = linkRegex.exec(html)) !== null) {
-    const href = match[1];
-    if (href === "../" || href === "." || href === "..") continue;
-    const isDirectory = href.endsWith("/");
-    const name = isDirectory ? href.slice(0, -1) : href;
-    if (name) {
-      entries.push({ name: decodeURIComponent(name), isDirectory });
+  while ((match = addRowRegex.exec(html)) !== null) {
+    const name = match[1];
+    const isDirectory = match[3] === "1";
+    if (name === "." || name === "..") continue;
+    entries.push({ name, isDirectory });
+  }
+
+  // Fallback: parse <a> tags for other browsers or older Chrome
+  if (entries.length === 0) {
+    const linkRegex = /<a[^>]+href="([^"]+)"[^>]*>([^<]*)<\/a>/gi;
+    while ((match = linkRegex.exec(html)) !== null) {
+      const href = match[1];
+      if (href === "../" || href === "." || href === ".." || href === "../") continue;
+      const isDirectory = href.endsWith("/");
+      const name = isDirectory ? href.slice(0, -1) : href;
+      if (name && name !== "..") {
+        entries.push({ name: decodeURIComponent(name), isDirectory });
+      }
     }
   }
+
   entries.sort((a, b) => {
     if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
     return a.name.localeCompare(b.name);
