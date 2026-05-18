@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "OpenMark",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Open-source Markdown viewer — syntax highlighting, diagrams, math, and more.",
-  "permissions": ["storage", "activeTab", "downloads"],
-  "host_permissions": ["file:///*", "*://*/*.md", "*://*/*.markdown", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*", "https://api.deepseek.com/*"],
+  "permissions": ["storage", "activeTab", "downloads", "cookies"],
+  "host_permissions": ["file:///*", "*://*/*.md", "*://*/*.markdown", "https://api.openai.com/*", "https://chatgpt.com/*", "https://generativelanguage.googleapis.com/*", "https://api.deepseek.com/*", "https://chat.deepseek.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

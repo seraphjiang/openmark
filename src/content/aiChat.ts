@@ -1,4 +1,4 @@
-import { AiConfig, AiProvider } from "../shared/types";
+import { AiConfig, AiProvider, AiAuthMode } from "../shared/types";
 import { getSettings, saveSettings } from "../shared/storage";
 
 interface ChatMessage {
@@ -67,72 +67,107 @@ async function buildConfigUI(container: HTMLElement): Promise<void> {
   container.innerHTML = "";
 
   // Provider select
-  const providerField = document.createElement("div");
-  providerField.className = "setting-field";
-  const providerLabel = document.createElement("label");
-  providerLabel.textContent = "Provider";
-  const providerSelect = document.createElement("select");
-  const providers: { value: AiProvider; label: string }[] = [
-    { value: "openai", label: "OpenAI (ChatGPT)" },
-    { value: "gemini", label: "Google Gemini" },
-    { value: "deepseek", label: "DeepSeek" },
-  ];
-  for (const p of providers) {
-    const opt = document.createElement("option");
-    opt.value = p.value;
-    opt.textContent = p.label;
-    if (p.value === config.provider) opt.selected = true;
-    providerSelect.appendChild(opt);
-  }
-  providerSelect.addEventListener("change", async () => {
-    const provider = providerSelect.value as AiProvider;
-    const model = getDefaultModel(provider);
-    await saveSettings({ aiConfig: { ...config, provider, model } });
-    buildConfigUI(container);
-  });
-  providerField.appendChild(providerLabel);
-  providerField.appendChild(providerSelect);
-  container.appendChild(providerField);
+  container.appendChild(createField("Provider", () => {
+    const sel = document.createElement("select");
+    const providers: { value: AiProvider; label: string }[] = [
+      { value: "openai", label: "OpenAI (ChatGPT)" },
+      { value: "gemini", label: "Google Gemini" },
+      { value: "deepseek", label: "DeepSeek" },
+    ];
+    for (const p of providers) {
+      const opt = document.createElement("option");
+      opt.value = p.value;
+      opt.textContent = p.label;
+      if (p.value === config.provider) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("change", async () => {
+      const provider = sel.value as AiProvider;
+      const model = getDefaultModel(provider);
+      await saveSettings({ aiConfig: { ...config, provider, model } });
+      buildConfigUI(container);
+    });
+    return sel;
+  }));
 
-  // API Key
-  const keyField = document.createElement("div");
-  keyField.className = "setting-field";
-  const keyLabel = document.createElement("label");
-  keyLabel.textContent = "API Key";
-  const keyInput = document.createElement("input");
-  keyInput.type = "password";
-  keyInput.className = "chat-key-input";
-  keyInput.value = config.apiKey;
-  keyInput.placeholder = "Enter your API key";
-  keyInput.addEventListener("change", async () => {
-    const current = (await getSettings()).aiConfig;
-    await saveSettings({ aiConfig: { ...current, apiKey: keyInput.value } });
-  });
-  keyField.appendChild(keyLabel);
-  keyField.appendChild(keyInput);
-  container.appendChild(keyField);
+  // Auth mode
+  container.appendChild(createField("Auth Mode", () => {
+    const sel = document.createElement("select");
+    const modes: { value: AiAuthMode; label: string }[] = [
+      { value: "session", label: "Browser Session (no key needed)" },
+      { value: "apikey", label: "API Key" },
+    ];
+    for (const m of modes) {
+      const opt = document.createElement("option");
+      opt.value = m.value;
+      opt.textContent = m.label;
+      if (m.value === config.authMode) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("change", async () => {
+      const current = (await getSettings()).aiConfig;
+      await saveSettings({ aiConfig: { ...current, authMode: sel.value as AiAuthMode } });
+      buildConfigUI(container);
+    });
+    return sel;
+  }));
+
+  // API Key (only if apikey mode)
+  if (config.authMode === "apikey") {
+    container.appendChild(createField("API Key", () => {
+      const input = document.createElement("input");
+      input.type = "password";
+      input.className = "chat-key-input";
+      input.value = config.apiKey;
+      input.placeholder = "Enter your API key";
+      input.addEventListener("change", async () => {
+        const current = (await getSettings()).aiConfig;
+        await saveSettings({ aiConfig: { ...current, apiKey: input.value } });
+      });
+      return input;
+    }));
+  } else {
+    const hint = document.createElement("div");
+    hint.className = "chat-session-hint";
+    hint.textContent = getSessionHint(config.provider);
+    container.appendChild(hint);
+  }
 
   // Model
-  const modelField = document.createElement("div");
-  modelField.className = "setting-field";
-  const modelLabel = document.createElement("label");
-  modelLabel.textContent = "Model";
-  const modelSelect = document.createElement("select");
-  const models = getModels(config.provider);
-  for (const m of models) {
-    const opt = document.createElement("option");
-    opt.value = m.value;
-    opt.textContent = m.label;
-    if (m.value === config.model) opt.selected = true;
-    modelSelect.appendChild(opt);
+  container.appendChild(createField("Model", () => {
+    const sel = document.createElement("select");
+    const models = getModels(config.provider);
+    for (const m of models) {
+      const opt = document.createElement("option");
+      opt.value = m.value;
+      opt.textContent = m.label;
+      if (m.value === config.model) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener("change", async () => {
+      const current = (await getSettings()).aiConfig;
+      await saveSettings({ aiConfig: { ...current, model: sel.value } });
+    });
+    return sel;
+  }));
+}
+
+function createField(label: string, buildControl: () => HTMLElement): HTMLElement {
+  const field = document.createElement("div");
+  field.className = "setting-field";
+  const lbl = document.createElement("label");
+  lbl.textContent = label;
+  field.appendChild(lbl);
+  field.appendChild(buildControl());
+  return field;
+}
+
+function getSessionHint(provider: AiProvider): string {
+  switch (provider) {
+    case "openai": return "Log in to chatgpt.com in this browser first.";
+    case "gemini": return "Log in to gemini.google.com in this browser first.";
+    case "deepseek": return "Log in to chat.deepseek.com in this browser first.";
   }
-  modelSelect.addEventListener("change", async () => {
-    const current = (await getSettings()).aiConfig;
-    await saveSettings({ aiConfig: { ...current, model: modelSelect.value } });
-  });
-  modelField.appendChild(modelLabel);
-  modelField.appendChild(modelSelect);
-  container.appendChild(modelField);
 }
 
 function getDefaultModel(provider: AiProvider): string {
@@ -167,7 +202,6 @@ function getDocumentContext(): string {
   const content = document.querySelector<HTMLElement>(".openmark-content");
   if (!content) return "";
   const text = content.innerText || content.textContent || "";
-  // Truncate to ~4000 chars to stay within typical context limits
   return text.length > 4000 ? text.slice(0, 4000) + "\n...(truncated)" : text;
 }
 
@@ -176,9 +210,9 @@ async function sendMessage(): Promise<void> {
   if (!text) return;
 
   const settings = await getSettings();
-  const { apiKey, provider, model } = settings.aiConfig;
+  const { apiKey, provider, model, authMode } = settings.aiConfig;
 
-  if (!apiKey) {
+  if (authMode === "apikey" && !apiKey) {
     appendMessage("assistant", "Please set your API key in AI Settings above.");
     return;
   }
@@ -190,7 +224,9 @@ async function sendMessage(): Promise<void> {
   sendBtn.classList.add("disabled");
 
   try {
-    const reply = await callAi(provider, apiKey, model, messages);
+    const reply = authMode === "session"
+      ? await callAiSession(provider, model, messages)
+      : await callAiKey(provider, apiKey, model, messages);
     messages.push({ role: "assistant", content: reply });
     appendMessage("assistant", reply);
   } catch (err: any) {
@@ -210,7 +246,31 @@ function appendMessage(role: "user" | "assistant", content: string): void {
   chatListEl.scrollTop = chatListEl.scrollHeight;
 }
 
-async function callAi(provider: AiProvider, apiKey: string, model: string, msgs: ChatMessage[]): Promise<string> {
+// === Session-based auth (via background worker for cookie access) ===
+
+async function callAiSession(provider: AiProvider, model: string, msgs: ChatMessage[]): Promise<string> {
+  const docContext = getDocumentContext();
+  const systemMsg = `You are a helpful assistant. The user is reading the following document:\n\n${docContext}\n\nAnswer questions about this document concisely.`;
+
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { type: "AI_CHAT_SESSION", provider, model, systemMsg, messages: msgs },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else if (response?.ok) {
+          resolve(response.reply);
+        } else {
+          reject(new Error(response?.error || "Session request failed"));
+        }
+      },
+    );
+  });
+}
+
+// === API key auth (direct from content script) ===
+
+async function callAiKey(provider: AiProvider, apiKey: string, model: string, msgs: ChatMessage[]): Promise<string> {
   const docContext = getDocumentContext();
   const systemMsg = `You are a helpful assistant. The user is reading the following document:\n\n${docContext}\n\nAnswer questions about this document concisely.`;
 
@@ -224,17 +284,8 @@ async function callAi(provider: AiProvider, apiKey: string, model: string, msgs:
 async function callOpenAi(apiKey: string, model: string, systemMsg: string, msgs: ChatMessage[]): Promise<string> {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemMsg },
-        ...msgs,
-      ],
-    }),
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages: [{ role: "system", content: systemMsg }, ...msgs] }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -249,14 +300,10 @@ async function callGemini(apiKey: string, model: string, systemMsg: string, msgs
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
-
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemMsg }] },
-      contents,
-    }),
+    body: JSON.stringify({ systemInstruction: { parts: [{ text: systemMsg }] }, contents }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -269,17 +316,8 @@ async function callGemini(apiKey: string, model: string, systemMsg: string, msgs
 async function callDeepSeek(apiKey: string, model: string, systemMsg: string, msgs: ChatMessage[]): Promise<string> {
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemMsg },
-        ...msgs,
-      ],
-    }),
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+    body: JSON.stringify({ model, messages: [{ role: "system", content: systemMsg }, ...msgs] }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

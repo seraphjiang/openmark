@@ -714,6 +714,14 @@
   width: 100%;
 }
 
+.chat-session-hint {
+  font-size: 0.75rem;
+  color: var(--om-blockquote);
+  font-style: italic;
+  padding: 4px 0;
+  margin-bottom: 4px;
+}
+
 .chat-key-input {
   width: 100%;
   padding: 4px 8px;

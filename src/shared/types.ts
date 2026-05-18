@@ -1,7 +1,9 @@
 export type AiProvider = "openai" | "gemini" | "deepseek";
+export type AiAuthMode = "apikey" | "session";
 
 export interface AiConfig {
   provider: AiProvider;
+  authMode: AiAuthMode;
   apiKey: string;
   model: string;
 }
@@ -37,6 +39,7 @@ export const DEFAULT_SETTINGS: Settings = {
   refreshInterval: 1000,
   aiConfig: {
     provider: "openai",
+    authMode: "session",
     apiKey: "",
     model: "gpt-4o-mini",
   },

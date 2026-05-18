@@ -1,6 +1,6 @@
 {
   "name": "openmark",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Open-source Markdown viewer browser extension",
   "private": true,
   "type": "module",
