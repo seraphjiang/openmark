@@ -4,13 +4,13 @@ import { getLocalState, saveLocalState } from "../shared/storage";
 interface ExplorerState {
   rootUrl: string;
   expandedDirs: Set<string>;
-  entriesCache: Map<string, DirEntry[]>;
   currentFile: string;
   onFileSelect: (fileUrl: string) => void;
 }
 
 let state: ExplorerState;
 let treeContainer: HTMLElement;
+let toolbarPathEl: HTMLElement;
 
 function listDirectory(dirUrl: string): Promise<DirEntry[]> {
   return new Promise((resolve, reject) => {
@@ -36,27 +36,42 @@ export async function initExplorer(
   state = {
     rootUrl,
     expandedDirs: new Set(localState.expandedDirs),
-    entriesCache: new Map(),
     currentFile,
     onFileSelect,
   };
+
+  container.innerHTML = "";
 
   const toolbar = document.createElement("div");
   toolbar.className = "explorer-toolbar";
 
   const upBtn = document.createElement("button");
-  upBtn.className = "explorer-up";
-  upBtn.textContent = "↑ Up";
+  upBtn.className = "explorer-btn";
+  upBtn.textContent = "↑";
   upBtn.title = "Go up one level";
   upBtn.addEventListener("click", navigateUp);
 
-  const pathEl = document.createElement("span");
-  pathEl.className = "explorer-path";
-  pathEl.textContent = getDisplayPath(rootUrl);
-  pathEl.title = rootUrl;
+  const refreshBtn = document.createElement("button");
+  refreshBtn.className = "explorer-btn";
+  refreshBtn.textContent = "↻";
+  refreshBtn.title = "Refresh";
+  refreshBtn.addEventListener("click", refreshTree);
+
+  const openBtn = document.createElement("button");
+  openBtn.className = "explorer-btn";
+  openBtn.textContent = "⌂";
+  openBtn.title = "Set root folder (enter path)";
+  openBtn.addEventListener("click", promptRootFolder);
+
+  toolbarPathEl = document.createElement("span");
+  toolbarPathEl.className = "explorer-path";
+  toolbarPathEl.textContent = getDisplayPath(rootUrl);
+  toolbarPathEl.title = rootUrl;
 
   toolbar.appendChild(upBtn);
-  toolbar.appendChild(pathEl);
+  toolbar.appendChild(refreshBtn);
+  toolbar.appendChild(openBtn);
+  toolbar.appendChild(toolbarPathEl);
 
   treeContainer = document.createElement("div");
   treeContainer.className = "explorer-tree";
@@ -75,7 +90,7 @@ export function setCurrentFile(fileUrl: string): void {
 }
 
 function getDisplayPath(url: string): string {
-  const path = url.replace("file://", "");
+  const path = decodeURIComponent(url.replace("file://", ""));
   const parts = path.split("/").filter(Boolean);
   if (parts.length <= 3) return "/" + parts.join("/");
   return ".../" + parts.slice(-2).join("/");
@@ -87,36 +102,57 @@ function getParentDir(url: string): string {
   return withoutTrailingSlash.slice(0, lastSlash + 1);
 }
 
+function updateToolbarPath(): void {
+  toolbarPathEl.textContent = getDisplayPath(state.rootUrl);
+  toolbarPathEl.title = state.rootUrl;
+}
+
+async function setRoot(newRoot: string): Promise<void> {
+  if (!newRoot.endsWith("/")) newRoot += "/";
+  state.rootUrl = newRoot;
+  state.expandedDirs.clear();
+  await saveLocalState({ explorerRoot: newRoot, expandedDirs: [] });
+  updateToolbarPath();
+  await renderTree();
+}
+
 async function navigateUp(): Promise<void> {
   const parent = getParentDir(state.rootUrl.endsWith("/") ? state.rootUrl.slice(0, -1) : state.rootUrl);
   if (parent === "file://" || parent === "file:///") return;
-  state.rootUrl = parent;
-  await saveLocalState({ explorerRoot: parent });
-  const pathEl = treeContainer.parentElement?.querySelector(".explorer-path");
-  if (pathEl) {
-    pathEl.textContent = getDisplayPath(parent);
-    pathEl.setAttribute("title", parent);
-  }
+  await setRoot(parent);
+}
+
+async function refreshTree(): Promise<void> {
   await renderTree();
+}
+
+function promptRootFolder(): void {
+  const current = decodeURIComponent(state.rootUrl.replace("file://", ""));
+  const input = prompt("Enter folder path:", current);
+  if (!input) return;
+  let url = input.trim();
+  if (!url.startsWith("file://")) {
+    url = "file://" + (url.startsWith("/") ? "" : "/") + url;
+  }
+  if (!url.endsWith("/")) url += "/";
+  setRoot(url);
 }
 
 async function renderTree(): Promise<void> {
   treeContainer.innerHTML = "";
-  const entries = await loadEntries(state.rootUrl);
-  const fragment = document.createDocumentFragment();
-  for (const entry of entries) {
-    fragment.appendChild(createEntryEl(entry, state.rootUrl));
+  try {
+    const entries = await listDirectory(state.rootUrl);
+    const fragment = document.createDocumentFragment();
+    for (const entry of entries) {
+      fragment.appendChild(createEntryEl(entry, state.rootUrl));
+    }
+    treeContainer.appendChild(fragment);
+  } catch {
+    const err = document.createElement("div");
+    err.className = "explorer-error";
+    err.textContent = "Failed to load directory";
+    treeContainer.appendChild(err);
   }
-  treeContainer.appendChild(fragment);
-}
-
-async function loadEntries(dirUrl: string): Promise<DirEntry[]> {
-  if (state.entriesCache.has(dirUrl)) {
-    return state.entriesCache.get(dirUrl)!;
-  }
-  const entries = await listDirectory(dirUrl);
-  state.entriesCache.set(dirUrl, entries);
-  return entries;
 }
 
 function createEntryEl(entry: DirEntry, parentUrl: string): HTMLElement {
@@ -155,11 +191,18 @@ function createEntryEl(entry: DirEntry, parentUrl: string): HTMLElement {
         state.expandedDirs.add(fullUrl);
         item.classList.add("expanded");
         children.style.display = "";
-        if (children.children.length === 0) {
-          const entries = await loadEntries(fullUrl);
+        // Always refresh children on expand
+        children.innerHTML = "";
+        try {
+          const entries = await listDirectory(fullUrl);
           for (const child of entries) {
             children.appendChild(createEntryEl(child, fullUrl));
           }
+        } catch {
+          const err = document.createElement("div");
+          err.className = "explorer-error";
+          err.textContent = "Failed to load";
+          children.appendChild(err);
         }
       }
       saveLocalState({ expandedDirs: Array.from(state.expandedDirs) });
@@ -167,10 +210,15 @@ function createEntryEl(entry: DirEntry, parentUrl: string): HTMLElement {
 
     item.appendChild(children);
     if (isExpanded) {
-      loadEntries(fullUrl).then((entries) => {
+      listDirectory(fullUrl).then((entries) => {
         for (const child of entries) {
           children.appendChild(createEntryEl(child, fullUrl));
         }
+      }).catch(() => {
+        const err = document.createElement("div");
+        err.className = "explorer-error";
+        err.textContent = "Failed to load";
+        children.appendChild(err);
       });
     }
   } else {
@@ -196,6 +244,4 @@ function updateActiveFile(): void {
   treeContainer.querySelectorAll(".explorer-item.active").forEach((el) => {
     el.classList.remove("active");
   });
-  // Can't easily find the active one by URL in the DOM, so re-render is simplest
-  // but for performance, we just let the next click handle it
 }

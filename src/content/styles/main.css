@@ -477,24 +477,32 @@
 .explorer-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 3px;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--om-border);
   margin-bottom: 0.5rem;
 }
 
-.explorer-up {
+.explorer-btn {
   background: var(--om-code-bg);
   border: 1px solid var(--om-border);
   border-radius: 4px;
-  padding: 2px 8px;
+  padding: 2px 6px;
   cursor: pointer;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--om-text);
+  line-height: 1.2;
 }
 
-.explorer-up:hover {
+.explorer-btn:hover {
   background: var(--om-border);
+}
+
+.explorer-error {
+  color: var(--om-blockquote);
+  font-size: 0.75rem;
+  font-style: italic;
+  padding: 4px;
 }
 
 .explorer-path {
