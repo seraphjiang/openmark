@@ -22,7 +22,7 @@ async function main() {
 
   for (const p of pages) {
     const page = await browser.newPage();
-    await page.setViewport({ width: p.width, height: p.height, deviceScaleFactor: 2 });
+    await page.setViewport({ width: p.width, height: p.height, deviceScaleFactor: 1 });
     const url = `file://${resolve(mockupsDir, p.file)}`;
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 15000 });
     // Extra wait for mermaid/katex rendering
