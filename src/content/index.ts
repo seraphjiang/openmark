@@ -34,14 +34,13 @@ function applySettings(settings: Settings): void {
   root.dataset.theme = getThemeValue(settings.theme);
 }
 
-async function render(): Promise<void> {
+async function render(source: string): Promise<void> {
+  if (!source.trim()) return;
+
   const settings = await getSettings();
   initRenderer(settings);
 
-  const rawText = document.body.innerText || document.body.textContent || "";
-  if (!rawText.trim()) return;
-
-  const html = renderMarkdown(rawText);
+  const html = renderMarkdown(source);
 
   document.body.className = "openmark-body";
   applySettings(settings);
@@ -96,7 +95,7 @@ function startAutoRefresh(interval: number): void {
         lastContent = text;
         refreshTimer && clearInterval(refreshTimer);
         refreshTimer = null;
-        await render();
+        await render(text);
       }
     } catch {
       // file may be temporarily unavailable during save
@@ -105,6 +104,18 @@ function startAutoRefresh(interval: number): void {
 }
 
 if (isMarkdownContent()) {
-  lastContent = document.body.innerText || "";
-  render();
+  if (window.location.protocol === "file:") {
+    readFileContent(window.location.href).then((text) => {
+      lastContent = text;
+      render(text);
+    }).catch(() => {
+      const fallback = document.body.innerText || document.body.textContent || "";
+      lastContent = fallback;
+      render(fallback);
+    });
+  } else {
+    const source = document.body.innerText || document.body.textContent || "";
+    lastContent = source;
+    render(source);
+  }
 }
