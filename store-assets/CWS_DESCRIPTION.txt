@@ -1,0 +1,43 @@
+OpenMark — Open-Source Markdown Viewer
+
+Render .md files into beautifully formatted documents directly in Chrome or Edge. Works with local files and remote raw markdown URLs.
+
+FEATURES
+
+▸ Syntax Highlighting — 180+ languages with automatic detection
+▸ Mermaid Diagrams — flowcharts, sequence diagrams, Gantt charts, pie charts, state diagrams, class diagrams
+▸ LaTeX Math — inline ($...$) and block ($$...$$) equations via KaTeX
+▸ File Explorer — browse local directories, click any .md file to render instantly
+▸ Live Editor — split-view markdown editor with real-time preview and Save (Ctrl+S)
+▸ AI Chat — ask questions about your document using OpenAI, Google Gemini, or DeepSeek (bring your own API key)
+▸ Table of Contents — auto-generated from headings with scroll tracking
+▸ Export — download as standalone HTML or print to PDF
+▸ Themes — light, dark, or auto (follows your system preference)
+▸ Resizable Panels — drag to resize, widths remembered across sessions
+▸ Auto-Refresh — live reload when you edit local files externally
+▸ Image Lightbox — click any image for full-screen view
+▸ Bookmarks & Comments — annotate pages for quick reference
+
+LAYOUT
+
+Three-panel design:
+• Left: file explorer + document outline (local files)
+• Center: rendered content + optional editor
+• Right: tabbed panel (Chat | Settings | Actions | Collaborate)
+
+Remote mode shows outline + content + right panel (no file explorer).
+
+PRIVACY
+
+All rendering happens locally in your browser. No data is collected or sent anywhere. AI Chat only sends data to the provider you configure with your own API key — the extension never phones home.
+
+PERMISSIONS
+
+• storage — save your settings
+• activeTab — render markdown on the current page
+• host_permissions for file:// — read local .md files
+
+OPEN SOURCE
+
+MIT licensed. View source, report issues, and contribute:
+https://github.com/seraphjiang/openmark

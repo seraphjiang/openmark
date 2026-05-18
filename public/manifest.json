@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OpenMark",
   "version": "0.1.18",
-  "description": "Open-source Markdown viewer — syntax highlighting, diagrams, math, and more.",
+  "description": "Render Markdown files beautifully in your browser — with syntax highlighting, Mermaid diagrams, LaTeX math, file explorer, live editor, and AI chat.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["file:///*", "*://*/*.md", "*://*/*.markdown", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*", "https://api.deepseek.com/*"],
   "background": {
