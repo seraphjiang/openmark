@@ -588,10 +588,11 @@
   padding: 2rem;
   display: flex;
   justify-content: center;
+  min-height: 100px;
 }
 
 .center-editor {
-  height: 40%;
+  flex: 1;
   min-height: 100px;
   overflow: hidden;
   border-top: 1px solid var(--om-border);

@@ -87,12 +87,14 @@ export function createLayout(isLocal: boolean): LayoutElements {
     if (isEditing) {
       centerEditor.style.display = "none";
       centerSplitHandle.style.display = "none";
+      centerPreview.style.height = "";
       centerPreview.style.flex = "1";
       editToggle.classList.remove("active");
     } else {
       centerEditor.style.display = "";
       centerSplitHandle.style.display = "";
-      centerPreview.style.flex = "";
+      centerPreview.style.flex = "none";
+      centerPreview.style.height = "60%";
       editToggle.classList.add("active");
     }
   });
@@ -127,12 +129,15 @@ function initSplitResize(handle: HTMLElement, top: HTMLElement, _bottom: HTMLEle
     e.preventDefault();
     startY = e.clientY;
     startHeight = top.getBoundingClientRect().height;
+    top.style.flex = "none";
     document.body.style.userSelect = "none";
     document.body.style.cursor = "row-resize";
 
     function onMove(ev: MouseEvent) {
       const delta = ev.clientY - startY;
-      const newHeight = Math.max(80, startHeight + delta);
+      const parent = top.parentElement;
+      const maxHeight = parent ? parent.getBoundingClientRect().height - 120 : 800;
+      const newHeight = Math.max(80, Math.min(maxHeight, startHeight + delta));
       top.style.height = newHeight + "px";
     }
 

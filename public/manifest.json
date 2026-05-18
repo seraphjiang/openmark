@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenMark",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Open-source Markdown viewer — syntax highlighting, diagrams, math, and more.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["file:///*", "*://*/*.md", "*://*/*.markdown", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*", "https://api.deepseek.com/*"],
