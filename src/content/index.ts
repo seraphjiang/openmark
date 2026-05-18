@@ -42,6 +42,7 @@ let lastContent = "";
 let currentFileUrl = "";
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 let currentSettings: Settings;
+let editorActive = false;
 const isLocal = typeof window !== "undefined" && window.location.protocol === "file:";
 
 function readFileContent(url: string): Promise<string> {
@@ -134,6 +135,7 @@ function restartAutoRefresh(): void {
 function startAutoRefresh(interval: number): void {
   if (refreshTimer !== null) return;
   refreshTimer = setInterval(async () => {
+    if (editorActive) return;
     try {
       const text = await readFileContent(currentFileUrl);
       if (text !== lastContent) {
@@ -152,10 +154,31 @@ function startAutoRefresh(interval: number): void {
 function initEditor(source: string): void {
   layout.centerEditor.innerHTML = "";
 
+  const toolbar = document.createElement("div");
+  toolbar.className = "editor-toolbar";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "editor-save-btn";
+  saveBtn.textContent = "Save";
+  saveBtn.title = "Save to file (Ctrl+S)";
+  saveBtn.addEventListener("click", saveFile);
+
+  const status = document.createElement("span");
+  status.className = "editor-status";
+  toolbar.appendChild(saveBtn);
+  toolbar.appendChild(status);
+
   const textarea = document.createElement("textarea");
   textarea.className = "editor-textarea";
   textarea.value = source;
   textarea.spellcheck = false;
+
+  textarea.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      saveFile();
+    }
+  });
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   textarea.addEventListener("input", () => {
@@ -167,7 +190,33 @@ function initEditor(source: string): void {
     }, 500);
   });
 
+  layout.centerEditor.appendChild(toolbar);
   layout.centerEditor.appendChild(textarea);
+}
+
+function saveFile(): void {
+  const textarea = layout.centerEditor.querySelector<HTMLTextAreaElement>(".editor-textarea");
+  const status = layout.centerEditor.querySelector<HTMLElement>(".editor-status");
+  if (!textarea || !isLocal) return;
+
+  const content = textarea.value;
+  chrome.runtime.sendMessage(
+    { type: "SAVE_FILE", url: currentFileUrl, content },
+    (response) => {
+      if (response?.ok) {
+        lastContent = content;
+        if (status) {
+          status.textContent = "Saved";
+          setTimeout(() => { status.textContent = ""; }, 1500);
+        }
+      } else {
+        if (status) {
+          status.textContent = "Save failed: " + (response?.error || "unknown");
+          setTimeout(() => { status.textContent = ""; }, 3000);
+        }
+      }
+    },
+  );
 }
 
 async function onSettingsChange(): Promise<void> {
@@ -227,6 +276,11 @@ async function init(): Promise<void> {
 
   // Init editor
   initEditor(source);
+
+  // Track editor state to pause auto-refresh
+  layout.editToggle.addEventListener("click", () => {
+    editorActive = !editorActive;
+  });
 
   // Init right panel (tabbed menu)
   initRightPanel(layout.right, currentSettings, onSettingsChange);

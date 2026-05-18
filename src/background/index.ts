@@ -33,6 +33,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "SAVE_FILE" && typeof message.url === "string" && typeof message.content === "string") {
+    if (!message.url.startsWith("file://")) {
+      sendResponse({ ok: false, error: "Only file:// URLs allowed" });
+      return true;
+    }
+    // Convert file:// URL to filesystem path
+    const path = decodeURIComponent(message.url.replace("file:///", ""));
+    const blob = new Blob([message.content], { type: "text/markdown" });
+    const dataUrl = URL.createObjectURL(blob);
+    chrome.downloads.download(
+      { url: dataUrl, filename: path, conflictAction: "overwrite", saveAs: false },
+      (downloadId) => {
+        URL.revokeObjectURL(dataUrl);
+        if (chrome.runtime.lastError) {
+          sendResponse({ ok: false, error: chrome.runtime.lastError.message });
+        } else {
+          sendResponse({ ok: true, downloadId });
+        }
+      },
+    );
+    return true;
+  }
+
   if (message.type === "LIST_DIRECTORY" && typeof message.url === "string") {
     if (!message.url.startsWith("file://")) {
       sendResponse({ ok: false, error: "Only file:// URLs allowed" });
