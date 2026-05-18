@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Small Promo 440x280</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  width: 440px;
+  height: 280px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  color: #e6edf3;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { font-size: 12px; color: #8b949e; margin-bottom: 16px; }
+
+.content { display: flex; flex: 1; gap: 16px; }
+
+.features {
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.features .item { color: #e6edf3; }
+
+.code-preview {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  flex: 1;
+}
+.code-preview .heading { color: #58a6ff; }
+.code-preview .bold { color: #e6edf3; font-weight: 700; }
+.code-preview .code-line { color: #7ee787; }
+.code-preview .math { color: #d2a8ff; }
+.code-preview .rendered-math { margin-top: 4px; }
+
+.badge {
+  background: #238636;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 12px;
+  display: inline-block;
+  margin-top: 12px;
+  align-self: flex-start;
+}
+</style>
+</head>
+<body>
+<h1>OpenMark</h1>
+<div class="subtitle">Markdown Viewer Extension</div>
+<div class="content">
+  <div class="features">
+    <div class="item">✨ Syntax Highlighting</div>
+    <div class="item">📊 Mermaid Diagrams</div>
+    <div class="item">📐 LaTeX Math</div>
+    <div class="item">📁 File Explorer</div>
+    <div class="item">🤖 AI Chat</div>
+    <div class="item">✎ Live Editor</div>
+  </div>
+  <div class="code-preview">
+    <div class="heading"># Hello World</div>
+    <div>Rendered <span class="bold">beautifully</span></div>
+    <br>
+    <div class="code-line">```javascript</div>
+    <div class="code-line">const x = 42;</div>
+    <div class="code-line">```</div>
+    <br>
+    <div class="rendered-math"><span class="katex-render" data-formula="E = mc^2"></span></div>
+  </div>
+</div>
+<div class="badge">Free & Open Source</div>
+
+<script>
+window.addEventListener('load', () => {
+  document.querySelectorAll('.katex-render').forEach(el => {
+    katex.render(el.dataset.formula, el, { throwOnError: false });
+  });
+});
+</script>
+</body>
+</html>

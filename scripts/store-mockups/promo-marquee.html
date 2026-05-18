@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Marquee Promo 1400x560</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  width: 1400px;
+  height: 560px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+  color: #e6edf3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px;
+}
+h1 { font-size: 42px; font-weight: 700; }
+.subtitle { font-size: 18px; color: #8b949e; margin-top: 6px; margin-bottom: 28px; }
+
+.cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.card {
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px 20px;
+  width: 200px;
+}
+.card .emoji { font-size: 24px; margin-bottom: 8px; }
+.card .title { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.card .desc { font-size: 11px; color: #8b949e; line-height: 1.4; }
+
+.feature-bar {
+  font-size: 13px;
+  color: #58a6ff;
+  margin-bottom: 24px;
+}
+
+.preview-frame {
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  width: 1100px;
+  height: 200px;
+  display: flex;
+  overflow: hidden;
+}
+.preview-left {
+  width: 180px;
+  background: #0d1117;
+  padding: 12px;
+  border-right: 1px solid #30363d;
+  font-size: 10px;
+}
+.preview-left .header { font-weight: 700; font-size: 9px; color: #8b949e; letter-spacing: 0.5px; margin-bottom: 6px; }
+.preview-left .item { color: #8b949e; margin: 3px 0; }
+.preview-left .item.active { color: #58a6ff; }
+
+.preview-center {
+  flex: 1;
+  padding: 12px 20px;
+  overflow: hidden;
+}
+.preview-center h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.preview-center p { font-size: 10px; color: #8b949e; margin-bottom: 8px; }
+.preview-center .code-block {
+  background: #161b22;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  margin-bottom: 8px;
+}
+.preview-center .code-block .kw { color: #ff7b72; }
+.preview-center .code-block .fn { color: #d2a8ff; }
+.preview-center .code-block .str { color: #a5d6ff; }
+.preview-center table { font-size: 9px; border-collapse: collapse; width: 100%; }
+.preview-center th, .preview-center td { border: 1px solid #30363d; padding: 3px 6px; }
+.preview-center th { background: #161b22; }
+
+.preview-right {
+  width: 220px;
+  background: #0d1117;
+  border-left: 1px solid #30363d;
+  padding: 8px 12px;
+  font-size: 10px;
+}
+.preview-right .tabs { display: flex; gap: 8px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #30363d; }
+.preview-right .tabs span { color: #8b949e; }
+.preview-right .tabs span.active { color: #58a6ff; }
+.preview-right .msg { background: #161b22; border-radius: 6px; padding: 6px 8px; margin-bottom: 6px; font-size: 9px; }
+.preview-right .msg.user { background: #0969da; color: #fff; margin-left: 30px; }
+
+.badge {
+  background: #238636;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 16px;
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<h1>OpenMark</h1>
+<div class="subtitle">Open-Source Markdown Viewer for Chrome & Edge</div>
+
+<div class="cards">
+  <div class="card"><div class="emoji">📝</div><div class="title">Render</div><div class="desc">Beautiful markdown with syntax highlighting for 180+ languages</div></div>
+  <div class="card"><div class="emoji">📊</div><div class="title">Diagrams</div><div class="desc">Mermaid flowcharts, sequence, Gantt, pie, state diagrams</div></div>
+  <div class="card"><div class="emoji">📐</div><div class="title">Math</div><div class="desc">LaTeX equations rendered with KaTeX — inline and block</div></div>
+  <div class="card"><div class="emoji">📁</div><div class="title">Explorer</div><div class="desc">Browse local files and folders, click to render</div></div>
+  <div class="card"><div class="emoji">🤖</div><div class="title">AI Chat</div><div class="desc">Ask questions about your document with GPT/Gemini/DeepSeek</div></div>
+  <div class="card"><div class="emoji">✎</div><div class="title">Editor</div><div class="desc">Live split-view editor with real-time preview</div></div>
+</div>
+
+<div class="feature-bar">Three-panel layout • Export HTML/PDF • Dark & Light themes • Auto-refresh • Resizable panels • Bookmarks</div>
+
+<div class="preview-frame">
+  <div class="preview-left">
+    <div class="header">EXPLORER</div>
+    <div class="item">📁 docs</div>
+    <div class="item">📁 src</div>
+    <div class="item active">📄 README.md</div>
+    <div class="item">📄 CHANGELOG.md</div>
+    <div style="margin-top: 10px;"><div class="header">OUTLINE</div></div>
+    <div class="item active">OpenMark</div>
+    <div class="item">Features</div>
+    <div class="item">Install</div>
+    <div class="item">Development</div>
+  </div>
+  <div class="preview-center">
+    <h3>OpenMark</h3>
+    <p>Open-source Markdown viewer for Chrome, Edge, and Chromium browsers.</p>
+    <div class="code-block">
+      <span class="kw">function</span> <span class="fn">render</span>(md) {<br>
+      &nbsp;&nbsp;<span class="kw">return</span> markdownIt.<span class="fn">render</span>(md);<br>
+      }
+    </div>
+    <table>
+      <tr><th>Feature</th><th>Status</th></tr>
+      <tr><td>Syntax Highlighting</td><td>✅</td></tr>
+      <tr><td>Mermaid Diagrams</td><td>✅</td></tr>
+      <tr><td>LaTeX Math</td><td>✅</td></tr>
+    </table>
+  </div>
+  <div class="preview-right">
+    <div class="tabs"><span class="active">Chat</span> <span>Settings</span> <span>Actions</span></div>
+    <div class="msg user">What does this project do?</div>
+    <div class="msg">It renders Markdown files in the browser with syntax highlighting, diagrams, and math support.</div>
+    <div class="msg user">How do I install it?</div>
+    <div class="msg">Clone the repo, run npm install && npm run build, then load dist/ as unpacked extension.</div>
+  </div>
+</div>
+
+<div class="badge">Free & Open Source</div>
+</body>
+</html>
