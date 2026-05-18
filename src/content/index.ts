@@ -68,13 +68,18 @@ async function render(): Promise<void> {
 
 let lastContent = "";
 function readFileContent(url: string): Promise<string> {
-  // fetch() is blocked by CORS on file:// origins; XHR works fine.
+  // Both fetch() and XHR are blocked by CORS on file:// pages (null origin).
+  // Proxy through the background service worker which has file:// permissions.
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onload = () => resolve(xhr.responseText);
-    xhr.onerror = reject;
-    xhr.send();
+    chrome.runtime.sendMessage({ type: "FETCH_FILE", url }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else if (response?.ok) {
+        resolve(response.text);
+      } else {
+        reject(new Error(response?.error ?? "Unknown error"));
+      }
+    });
   });
 }
 
