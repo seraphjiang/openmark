@@ -1,0 +1,54 @@
+# Cursor Rules for OpenMark
+
+## Project
+
+Chrome Manifest V3 extension. Renders .md files with syntax highlighting, mermaid, katex, file explorer, editor, AI chat.
+
+## Tech Stack
+
+- TypeScript (strict), Vite, Manifest V3
+- markdown-it, highlight.js, mermaid, KaTeX (all bundled in one IIFE content script)
+- No React/Vue/frameworks — vanilla DOM manipulation
+
+## Build
+
+```bash
+npm run build  # tsc --noEmit && vite build && python3 scripts/ascii-escape-content.py && vite build --config vite.config.pages.ts
+```
+
+## Architecture
+
+- `src/content/` → single IIFE bundle (`dist/content.js`, ~4MB with mermaid)
+- `src/background/` → ES module service worker
+- `src/shared/` → types + storage helpers shared between content/popup/options/background
+- `public/manifest.json` → extension manifest (version source of truth)
+
+## Important Constraints
+
+- NEVER use innerHTML with interpolated user content (XSS). Use createElement + textContent.
+- Mermaid is bundled directly in content.js. Do NOT externalize or inject as script tag.
+- ASCII-escape post-build is required for Chrome Web Store (Unicode in JS = rejection).
+- package.json and manifest.json versions must match.
+- Editor input handler must set `renderFromEditor = true` before calling renderContent.
+- File explorer parses Chrome's `addRow(name, url, isDir, ...)` format from file:// directory fetches.
+- Background worker validates `sender.id === chrome.runtime.id` and `file://` scheme on all fetch proxying.
+
+## Style
+
+- No comments unless explaining a non-obvious constraint or workaround
+- Prefer `document.createElement` over innerHTML for dynamic content
+- Use chrome.storage.sync for settings, chrome.storage.local for ephemeral UI state
+- Functions should be small and single-purpose
+- No frameworks, no abstractions beyond what the feature requires
+
+## File Guide
+
+| Task | File |
+|------|------|
+| Add right panel tab | `src/content/flyoutMenu.ts` |
+| Add background message handler | `src/background/index.ts` |
+| Change rendering | `src/content/renderer.ts` |
+| Modify layout DOM | `src/content/layout.ts` |
+| Add/change styles | `src/content/styles/main.css` |
+| Add setting | `src/shared/types.ts` (Settings interface + DEFAULT_SETTINGS) |
+| Add AI provider | `src/content/aiChat.ts` |
