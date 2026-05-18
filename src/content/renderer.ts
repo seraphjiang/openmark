@@ -3,15 +3,32 @@ import hljs from "highlight.js";
 import katex from "katex";
 import { Settings } from "../shared/types";
 
-// mermaid is dynamically imported so it ends up in its own chunk,
-// keeping content.js lean and free of Unicode data tables that
-// trigger Chrome Web Store false-positive encoding errors.
-let mermaidInstance: typeof import("mermaid")["default"] | null = null;
+// mermaid is loaded from CDN at runtime via <script> injection.
+// Bundling mermaid causes Unicode data tables (Uint16Array literals)
+// that trigger Chrome Web Store false-positive UTF-8 encoding errors.
+// Content scripts cannot use ES module dynamic import(), so CDN is the
+// only viable approach to keep content.js as a lean IIFE.
+const MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+let mermaidInstance: any = null;
 
-async function getMermaid(): Promise<typeof import("mermaid")["default"]> {
+function injectMermaidScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${MERMAID_CDN}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = MERMAID_CDN;
+    script.onload = () => resolve();
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+async function getMermaid(): Promise<any> {
   if (mermaidInstance) return mermaidInstance;
-  const mod = await import("mermaid");
-  mermaidInstance = mod.default;
+  await injectMermaidScript();
+  mermaidInstance = (window as any).mermaid;
   return mermaidInstance;
 }
 

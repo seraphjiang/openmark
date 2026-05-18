@@ -7,20 +7,19 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     target: "esnext",
+    lib: {
+      entry: resolve(__dirname, "src/content/index.ts"),
+      name: "openmark",
+      formats: ["iife"],
+      fileName: () => "content.js",
+    },
     rollupOptions: {
-      input: {
-        content: resolve(__dirname, "src/content/index.ts"),
-      },
+      // Exclude mermaid from bundle — loaded from CDN at runtime
+      external: ["mermaid"],
       output: {
-        format: "es",
-        entryFileNames: "[name].js",
-        chunkFileNames: "chunks/[name]-[hash].js",
-        assetFileNames: "assets/[name].[ext]",
-        // Let Rollup naturally split mermaid into its own chunk
-        manualChunks: (id) => {
-          if (id.includes("node_modules/mermaid")) return "mermaid";
-          if (id.includes("node_modules/katex")) return "katex";
-          if (id.includes("node_modules/highlight.js")) return "highlight";
+        inlineDynamicImports: true,
+        globals: {
+          mermaid: "mermaid",
         },
       },
     },

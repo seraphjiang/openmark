@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OpenMark",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Open-source Markdown viewer — syntax highlighting, diagrams, math, and more.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["file:///*", "*://*/*.md", "*://*/*.markdown"],
@@ -14,14 +14,7 @@
       "matches": ["file:///*/*.md", "file:///*/*.markdown", "*://*/*.md", "*://*/*.markdown"],
       "js": ["content.js"],
       "css": ["assets/content.css"],
-      "run_at": "document_end",
-      "type": "module"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["chunks/*.js"],
-      "matches": ["<all_urls>"]
+      "run_at": "document_end"
     }
   ],
   "action": {
