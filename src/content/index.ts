@@ -58,11 +58,16 @@ function readFileContent(url: string): Promise<string> {
   });
 }
 
+let renderFromEditor = false;
+
 async function renderContent(source: string, settings: Settings): Promise<void> {
   if (!source.trim()) return;
 
   initRenderer(settings);
   const html = renderMarkdown(source);
+
+  // Preserve preview scroll position
+  const scrollTop = layout.centerPreview.scrollTop;
 
   const content = document.createElement("article");
   content.className = "openmark-content";
@@ -70,6 +75,9 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
 
   layout.centerPreview.innerHTML = "";
   layout.centerPreview.appendChild(content);
+
+  // Restore scroll position
+  layout.centerPreview.scrollTop = scrollTop;
 
   if (settings.enableMermaid) {
     await renderMermaidDiagrams();
@@ -84,11 +92,14 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
     layout.leftOutline.appendChild(toc);
   }
 
-  // Update editor content if editor exists
-  const editorTextarea = layout.centerEditor.querySelector<HTMLTextAreaElement>(".editor-textarea");
-  if (editorTextarea && editorTextarea.value !== source) {
-    editorTextarea.value = source;
+  // Only sync editor textarea when change came from outside (file refresh, file select)
+  if (!renderFromEditor) {
+    const editorTextarea = layout.centerEditor.querySelector<HTMLTextAreaElement>(".editor-textarea");
+    if (editorTextarea && editorTextarea.value !== source) {
+      editorTextarea.value = source;
+    }
   }
+  renderFromEditor = false;
 }
 
 function getParentDir(url: string): string {
@@ -151,8 +162,9 @@ function initEditor(source: string): void {
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
       lastContent = textarea.value;
+      renderFromEditor = true;
       await renderContent(textarea.value, currentSettings);
-    }, 300);
+    }, 500);
   });
 
   layout.centerEditor.appendChild(textarea);
