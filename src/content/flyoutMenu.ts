@@ -1,5 +1,6 @@
 import { Settings } from "../shared/types";
 import { saveSettings } from "../shared/storage";
+import { createChatTab } from "./aiChat";
 
 export function initRightPanel(
   container: HTMLElement,
@@ -13,6 +14,7 @@ export function initRightPanel(
   tabBar.className = "right-tab-bar";
 
   const tabs: { id: string; label: string; content: HTMLElement }[] = [
+    { id: "chat", label: "Chat", content: createChatTab() },
     { id: "settings", label: "Settings", content: createSettingsTab(settings, onSettingsChange) },
     { id: "actions", label: "Actions", content: createActionsTab() },
     { id: "collaborate", label: "Collab", content: createCollaborateTab() },

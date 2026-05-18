@@ -68,8 +68,8 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
   content.className = "openmark-content";
   content.innerHTML = html;
 
-  layout.center.innerHTML = "";
-  layout.center.appendChild(content);
+  layout.centerPreview.innerHTML = "";
+  layout.centerPreview.appendChild(content);
 
   if (settings.enableMermaid) {
     await renderMermaidDiagrams();
@@ -82,6 +82,12 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
   if (settings.showToc) {
     const toc = generateToc(content);
     layout.leftOutline.appendChild(toc);
+  }
+
+  // Update editor content if editor exists
+  const editorTextarea = layout.centerEditor.querySelector<HTMLTextAreaElement>(".editor-textarea");
+  if (editorTextarea && editorTextarea.value !== source) {
+    editorTextarea.value = source;
   }
 }
 
@@ -130,6 +136,26 @@ function startAutoRefresh(interval: number): void {
       // file may be temporarily unavailable during save
     }
   }, interval);
+}
+
+function initEditor(source: string): void {
+  layout.centerEditor.innerHTML = "";
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "editor-textarea";
+  textarea.value = source;
+  textarea.spellcheck = false;
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  textarea.addEventListener("input", () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+      lastContent = textarea.value;
+      await renderContent(textarea.value, currentSettings);
+    }, 300);
+  });
+
+  layout.centerEditor.appendChild(textarea);
 }
 
 async function onSettingsChange(): Promise<void> {
@@ -186,6 +212,9 @@ async function init(): Promise<void> {
     layout.leftExplorer.style.display = "none";
     layout.leftSplitHandle.style.display = "none";
   }
+
+  // Init editor
+  initEditor(source);
 
   // Init right panel (tabbed menu)
   initRightPanel(layout.right, currentSettings, onSettingsChange);

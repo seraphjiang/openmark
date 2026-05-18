@@ -1,3 +1,11 @@
+export type AiProvider = "openai" | "gemini" | "deepseek";
+
+export interface AiConfig {
+  provider: AiProvider;
+  apiKey: string;
+  model: string;
+}
+
 export interface Settings {
   theme: "light" | "dark" | "auto";
   fontSize: number;
@@ -11,6 +19,7 @@ export interface Settings {
   enableHighlight: boolean;
   autoRefresh: boolean;
   refreshInterval: number;
+  aiConfig: AiConfig;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -26,6 +35,11 @@ export const DEFAULT_SETTINGS: Settings = {
   enableHighlight: true,
   autoRefresh: true,
   refreshInterval: 1000,
+  aiConfig: {
+    provider: "openai",
+    apiKey: "",
+    model: "gpt-4o-mini",
+  },
 };
 
 export interface DirEntry {
