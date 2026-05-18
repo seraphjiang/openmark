@@ -67,11 +67,21 @@ async function render(): Promise<void> {
 }
 
 let lastContent = "";
+function readFileContent(url: string): Promise<string> {
+  // fetch() is blocked by CORS on file:// origins; XHR works fine.
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onload = () => resolve(xhr.responseText);
+    xhr.onerror = reject;
+    xhr.send();
+  });
+}
+
 function startAutoRefresh(interval: number): void {
   setInterval(async () => {
     try {
-      const response = await fetch(window.location.href);
-      const text = await response.text();
+      const text = await readFileContent(window.location.href);
       if (text !== lastContent) {
         lastContent = text;
         await render();

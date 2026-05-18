@@ -3,22 +3,22 @@ import hljs from "highlight.js";
 import katex from "katex";
 import { Settings } from "../shared/types";
 
-// mermaid is loaded from CDN at runtime via <script> injection.
-// Bundling mermaid causes Unicode data tables (Uint16Array literals)
-// that trigger Chrome Web Store false-positive UTF-8 encoding errors.
-// Content scripts cannot use ES module dynamic import(), so CDN is the
-// only viable approach to keep content.js as a lean IIFE.
-const MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js";
+// mermaid-bundle.js is a separate IIFE bundle (web_accessible_resource).
+// Injecting it via chrome.runtime.getURL satisfies the page's CSP
+// (chrome-extension:// is always allowed) while keeping the main
+// content.js free of the Unicode data tables that trigger CWS
+// false-positive UTF-8 encoding errors.
 let mermaidInstance: any = null;
 
 function injectMermaidScript(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${MERMAID_CDN}"]`)) {
+    const src = chrome.runtime.getURL("mermaid-bundle.js");
+    if (document.querySelector(`script[src="${src}"]`)) {
       resolve();
       return;
     }
     const script = document.createElement("script");
-    script.src = MERMAID_CDN;
+    script.src = src;
     script.onload = () => resolve();
     script.onerror = reject;
     document.head.appendChild(script);
