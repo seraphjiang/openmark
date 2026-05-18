@@ -14,13 +14,8 @@ export default defineConfig({
       fileName: () => "content.js",
     },
     rollupOptions: {
-      // Exclude mermaid from bundle — loaded from CDN at runtime
-      external: ["mermaid"],
       output: {
         inlineDynamicImports: true,
-        globals: {
-          mermaid: "mermaid",
-        },
       },
     },
   },
