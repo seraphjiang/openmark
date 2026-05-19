@@ -125,3 +125,23 @@ gh release create v0.X.Y openmark-v0.X.Y.zip --title "v0.X.Y" --notes "..."
 **Modify layout**: Edit `src/content/layout.ts` for structure, `src/content/styles/main.css` for styling.
 
 **Add a new setting**: Update `Settings` interface + `DEFAULT_SETTINGS` in `src/shared/types.ts`, then use via `getSettings()`.
+
+## Backlog
+
+### Cloud Upload (Google Drive / OneDrive / SharePoint)
+**Goal**: One-click upload of current file (or exported HTML/DOCX) to cloud storage from the Actions tab.
+
+**Technical approach**:
+- Use `chrome.identity.launchWebAuthFlow` for OAuth2 (MV3 compatible)
+- Upload via REST API after token acquisition:
+  - Google Drive: `https://www.googleapis.com/upload/drive/v3/files`
+  - OneDrive: `https://graph.microsoft.com/v1.0/me/drive/root:/{filename}:/content`
+  - SharePoint: same Graph API, different drive endpoint
+
+**Prerequisites before implementing**:
+1. **Google**: Create OAuth 2.0 Client ID in GCP Console (type: Chrome App, bind to extension ID) → add `oauth2.client_id` + `oauth2.scopes` to manifest
+2. **Microsoft**: Create App Registration in Azure Portal with scopes `Files.ReadWrite` + `Sites.ReadWrite.All` → same manifest oauth2 block
+
+**UI**: Add "Upload to Cloud" section in Actions tab with three buttons: Google Drive / OneDrive / SharePoint. Auth token cached in `chrome.storage.local`, refresh on 401.
+
+**CWS note**: Adding `identity` permission requires re-review. Plan for a separate release.
