@@ -1,6 +1,8 @@
 import { Settings } from "../shared/types";
 import { saveSettings } from "../shared/storage";
 import { createChatTab } from "./aiChat";
+import { exportToDocx } from "./docxExport";
+import { startPresentation } from "./presentation";
 
 export function initRightPanel(
   container: HTMLElement,
@@ -53,6 +55,11 @@ function createSettingsTab(settings: Settings, onSettingsChange: () => void): HT
     { value: "auto", label: "Auto" },
     { value: "light", label: "Light" },
     { value: "dark", label: "Dark" },
+    { value: "github", label: "GitHub" },
+    { value: "github-dark", label: "GitHub Dark" },
+    { value: "dracula", label: "Dracula" },
+    { value: "nord", label: "Nord" },
+    { value: "solarized", label: "Solarized" },
   ], async (val) => {
     await saveSettings({ theme: val as Settings["theme"] });
     onSettingsChange();
@@ -136,6 +143,37 @@ function createActionsTab(): HTMLElement {
   copyWordBtn.textContent = "Copy for Word/Outlook";
   copyWordBtn.addEventListener("click", () => copyForWord(copyWordBtn));
   el.appendChild(copyWordBtn);
+
+  const docxBtn = document.createElement("button");
+  docxBtn.className = "action-btn";
+  docxBtn.textContent = "Export DOCX";
+  docxBtn.addEventListener("click", () => exportToDocx(getFileName()));
+  el.appendChild(docxBtn);
+
+  const presentBtn = document.createElement("button");
+  presentBtn.className = "action-btn";
+  presentBtn.textContent = "Present (Slides)";
+  presentBtn.title = "Slides split by --- or \n# heading (Ctrl+Shift+P)";
+  presentBtn.addEventListener("click", startPresentation);
+  el.appendChild(presentBtn);
+
+  // Mermaid diagram export section
+  const mermaidDivider = document.createElement("div");
+  mermaidDivider.className = "action-section-label";
+  mermaidDivider.textContent = "Diagrams";
+  el.appendChild(mermaidDivider);
+
+  const mermaidSvgBtn = document.createElement("button");
+  mermaidSvgBtn.className = "action-btn";
+  mermaidSvgBtn.textContent = "Export Diagrams (SVG)";
+  mermaidSvgBtn.addEventListener("click", () => exportMermaidDiagrams("svg"));
+  el.appendChild(mermaidSvgBtn);
+
+  const mermaidPngBtn = document.createElement("button");
+  mermaidPngBtn.className = "action-btn";
+  mermaidPngBtn.textContent = "Export Diagrams (PNG)";
+  mermaidPngBtn.addEventListener("click", () => exportMermaidDiagrams("png"));
+  el.appendChild(mermaidPngBtn);
 
   return el;
 }
@@ -512,4 +550,51 @@ function getFileName(): string {
   const path = window.location.pathname;
   const name = path.split("/").pop() || "document";
   return name.replace(/\.(md|markdown)$/i, "");
+}
+
+function exportMermaidDiagrams(format: "svg" | "png"): void {
+  const diagrams = document.querySelectorAll<HTMLElement>(".mermaid");
+  if (diagrams.length === 0) {
+    alert("No Mermaid diagrams found in this document.");
+    return;
+  }
+  diagrams.forEach((el, i) => {
+    const svgEl = el.querySelector("svg");
+    if (!svgEl) return;
+    const svgStr = new XMLSerializer().serializeToString(svgEl);
+    if (format === "svg") {
+      const blob = new Blob([svgStr], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `diagram-${i + 1}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      // PNG via canvas
+      const img = new Image();
+      const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width || 800;
+        canvas.height = img.height || 600;
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const pngUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = pngUrl;
+          a.download = `diagram-${i + 1}.png`;
+          a.click();
+          URL.revokeObjectURL(pngUrl);
+        }, "image/png");
+      };
+      img.src = url;
+    }
+  });
 }

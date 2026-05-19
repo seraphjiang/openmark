@@ -129,7 +129,8 @@ let mermaidTheme: "dark" | "default" = "default";
 
 export function initRenderer(settings: Settings): void {
   md = createMarkdownIt(settings);
-  mermaidTheme = settings.theme === "dark" ? "dark" : "default";
+  const darkThemes = ["dark", "github-dark", "dracula", "nord"];
+  mermaidTheme = darkThemes.includes(settings.theme) ? "dark" : "default";
 
   if (settings.enableMermaid) {
     mermaid.initialize({ startOnLoad: false, theme: mermaidTheme });

@@ -1,4 +1,6 @@
-export type AiProvider = "openai" | "gemini" | "deepseek";
+export type AiProvider = "openai" | "gemini" | "deepseek" | "anthropic";
+
+export type ColorTheme = "auto" | "light" | "dark" | "github" | "github-dark" | "dracula" | "nord" | "solarized";
 
 export interface AiConfig {
   provider: AiProvider;
@@ -7,7 +9,7 @@ export interface AiConfig {
 }
 
 export interface Settings {
-  theme: "light" | "dark" | "auto";
+  theme: ColorTheme;
   fontSize: number;
   lineHeight: number;
   maxWidth: number;
@@ -23,7 +25,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: "auto",
+  theme: "auto" as ColorTheme,
   fontSize: 16,
   lineHeight: 1.6,
   maxWidth: 900,

@@ -851,3 +851,227 @@
     padding: 1rem;
   }
 }
+
+/* ===== THEMES ===== */
+
+/* GitHub theme */
+[data-theme="github"] {
+  --om-bg: #ffffff;
+  --om-text: #1f2328;
+  --om-border: #d0d7de;
+  --om-link: #0969da;
+  --om-code-bg: #f6f8fa;
+  --om-blockquote: #636c76;
+}
+
+/* GitHub Dark theme */
+[data-theme="github-dark"] {
+  --om-bg: #0d1117;
+  --om-text: #e6edf3;
+  --om-border: #30363d;
+  --om-link: #58a6ff;
+  --om-code-bg: #161b22;
+  --om-blockquote: #8b949e;
+}
+
+/* Dracula theme */
+[data-theme="dracula"] {
+  --om-bg: #282a36;
+  --om-text: #f8f8f2;
+  --om-border: #44475a;
+  --om-link: #8be9fd;
+  --om-code-bg: #44475a;
+  --om-blockquote: #6272a4;
+}
+
+/* Nord theme */
+[data-theme="nord"] {
+  --om-bg: #2e3440;
+  --om-text: #eceff4;
+  --om-border: #4c566a;
+  --om-link: #88c0d0;
+  --om-code-bg: #3b4252;
+  --om-blockquote: #81a1c1;
+}
+
+/* Solarized theme */
+[data-theme="solarized"] {
+  --om-bg: #fdf6e3;
+  --om-text: #657b83;
+  --om-border: #eee8d5;
+  --om-link: #268bd2;
+  --om-code-bg: #eee8d5;
+  --om-blockquote: #93a1a1;
+}
+
+/* ===== CODE BLOCK COPY BUTTON ===== */
+
+.om-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-family: var(--om-font);
+  background: var(--om-bg);
+  color: var(--om-text);
+  border: 1px solid var(--om-border);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.openmark-content pre:hover .om-copy-btn {
+  opacity: 1;
+}
+
+/* ===== STATS BAR ===== */
+
+.om-stats-bar {
+  position: fixed;
+  bottom: 10px;
+  right: 20px;
+  font-size: 0.75rem;
+  color: var(--om-blockquote, #888);
+  background: var(--om-bg, #fff);
+  border: 1px solid var(--om-border, #ddd);
+  border-radius: 12px;
+  padding: 3px 10px;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.85;
+}
+
+/* ===== READING PROGRESS BAR ===== */
+
+.om-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--om-link, #0969da);
+  width: 0%;
+  z-index: 9999;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+/* ===== RAW VIEW ===== */
+
+.om-raw-view {
+  font-family: var(--om-mono);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  padding: 1rem;
+  color: var(--om-text);
+}
+
+/* ===== ACTION SECTION LABEL ===== */
+
+.action-section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--om-blockquote, #888);
+  margin: 12px 0 4px;
+  padding: 0 4px;
+}
+
+/* ===== PRESENTATION MODE ===== */
+
+.om-presentation {
+  position: fixed;
+  inset: 0;
+  background: var(--om-bg, #fff);
+  color: var(--om-text, #1f2328);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--om-font, system-ui);
+}
+
+.pres-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--om-border, #d0d7de);
+  font-size: 0.875rem;
+}
+
+.pres-title {
+  font-weight: 600;
+  flex: 1;
+}
+
+.pres-counter {
+  color: var(--om-blockquote, #888);
+}
+
+.pres-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--om-text);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.pres-close:hover {
+  background: var(--om-code-bg);
+}
+
+.pres-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.pres-content {
+  flex: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  overflow-y: auto;
+  height: 100%;
+  font-size: 1.15rem;
+  line-height: 1.7;
+}
+
+.pres-nav {
+  flex-shrink: 0;
+  width: 48px;
+  height: 80px;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--om-text);
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  border-radius: 6px;
+}
+
+.pres-nav:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--om-code-bg);
+}
+
+.pres-nav:disabled {
+  opacity: 0.15;
+  cursor: default;
+}
+
+.pres-hint {
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--om-blockquote, #888);
+  padding: 6px;
+  border-top: 1px solid var(--om-border, #d0d7de);
+}

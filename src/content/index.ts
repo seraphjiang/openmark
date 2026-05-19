@@ -6,6 +6,7 @@ import { createLayout, LayoutElements } from "./layout";
 import { initResizer } from "./resizer";
 import { initExplorer, setCurrentFile } from "./fileExplorer";
 import { initRightPanel } from "./flyoutMenu";
+import { startPresentation } from "./presentation";
 import { Settings } from "../shared/types";
 
 function isMarkdownContent(): boolean {
@@ -21,11 +22,26 @@ function isMarkdownContent(): boolean {
   return false;
 }
 
-function getThemeValue(theme: Settings["theme"]): "light" | "dark" {
+function getThemeValue(theme: Settings["theme"]): string {
   if (theme === "auto") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
   return theme;
+}
+
+function computeReadingStats(source: string): { words: number; minutes: number } {
+  const words = source.trim().split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.round(words / 200));
+  return { words, minutes };
+}
+
+let rawVisible = false;
+let statsBar: HTMLElement | null = null;
+
+function updateStatsBar(source: string): void {
+  if (!statsBar) return;
+  const { words, minutes } = computeReadingStats(source);
+  statsBar.textContent = `${words.toLocaleString()} words · ${minutes} min read`;
 }
 
 function applySettings(settings: Settings): void {
@@ -85,6 +101,7 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
   }
 
   initLightbox(content);
+  addCodeCopyButtons(content);
 
   // Rebuild outline/TOC in left panel
   layout.leftOutline.innerHTML = "";
@@ -92,6 +109,9 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
     const toc = generateToc(content);
     layout.leftOutline.appendChild(toc);
   }
+
+  // Update word count / reading time
+  updateStatsBar(source);
 
   // Only sync editor textarea when change came from outside (file refresh, file select)
   if (!renderFromEditor) {
@@ -101,6 +121,26 @@ async function renderContent(source: string, settings: Settings): Promise<void> 
     }
   }
   renderFromEditor = false;
+}
+
+function addCodeCopyButtons(container: HTMLElement): void {
+  container.querySelectorAll("pre").forEach((pre) => {
+    if (pre.querySelector(".om-copy-btn")) return;
+    const btn = document.createElement("button");
+    btn.className = "om-copy-btn";
+    btn.textContent = "Copy";
+    btn.title = "Copy code";
+    btn.addEventListener("click", () => {
+      const code = pre.querySelector("code");
+      const text = code?.innerText ?? pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = "Copied!";
+        setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+      });
+    });
+    pre.style.position = "relative";
+    pre.appendChild(btn);
+  });
 }
 
 function getParentDir(url: string): string {
@@ -113,6 +153,7 @@ async function onFileSelect(fileUrl: string): Promise<void> {
   try {
     const text = await readFileContent(fileUrl);
     lastContent = text;
+    (window as any).__openmarkLastContent = text;
     currentFileUrl = fileUrl;
     setCurrentFile(fileUrl);
     await renderContent(text, currentSettings);
@@ -140,6 +181,7 @@ function startAutoRefresh(interval: number): void {
       const text = await readFileContent(currentFileUrl);
       if (text !== lastContent) {
         lastContent = text;
+        (window as any).__openmarkLastContent = text;
         refreshTimer && clearInterval(refreshTimer);
         refreshTimer = null;
         await renderContent(text, currentSettings);
@@ -239,6 +281,22 @@ async function init(): Promise<void> {
   applySettings(currentSettings);
   document.body.appendChild(layout.root);
 
+  // Stats bar (word count + reading time)
+  statsBar = document.createElement("div");
+  statsBar.className = "om-stats-bar";
+  document.body.appendChild(statsBar);
+
+  // Reading progress bar
+  const progressBar = document.createElement("div");
+  progressBar.className = "om-progress-bar";
+  document.body.appendChild(progressBar);
+  layout.centerPreview.addEventListener("scroll", () => {
+    const el = layout.centerPreview;
+    const max = el.scrollHeight - el.clientHeight;
+    const pct = max > 0 ? (el.scrollTop / max) * 100 : 0;
+    progressBar.style.width = pct + "%";
+  });
+
   // Apply saved panel widths
   if (isLocal) {
     layout.left.style.width = localState.tocWidth + "px";
@@ -257,6 +315,7 @@ async function init(): Promise<void> {
     source = originalText;
   }
   lastContent = source;
+  (window as any).__openmarkLastContent = source;
 
   // Render content
   await renderContent(source, currentSettings);
@@ -293,6 +352,32 @@ async function init(): Promise<void> {
   if (isLocal && currentSettings.autoRefresh) {
     startAutoRefresh(currentSettings.refreshInterval);
   }
+
+  // Expose lastContent for presentation module
+  (window as any).__openmarkLastContent = "";
+
+  // Global keyboard shortcuts
+  document.addEventListener("keydown", (e) => {
+    // Ctrl+Shift+M: toggle RAW view
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "M") {
+      e.preventDefault();
+      rawVisible = !rawVisible;
+      if (rawVisible) {
+        layout.centerPreview.innerHTML = "";
+        const pre = document.createElement("pre");
+        pre.className = "om-raw-view";
+        pre.textContent = lastContent;
+        layout.centerPreview.appendChild(pre);
+      } else {
+        renderContent(lastContent, currentSettings);
+      }
+    }
+    // Ctrl+Shift+P: presentation mode
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "P") {
+      e.preventDefault();
+      startPresentation();
+    }
+  });
 }
 
 if (isMarkdownContent()) {

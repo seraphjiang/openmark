@@ -73,6 +73,7 @@ async function buildConfigUI(container: HTMLElement): Promise<void> {
       { value: "openai", label: "OpenAI (ChatGPT)" },
       { value: "gemini", label: "Google Gemini" },
       { value: "deepseek", label: "DeepSeek" },
+      { value: "anthropic", label: "Anthropic (Claude)" },
     ];
     for (const p of providers) {
       const opt = document.createElement("option");
@@ -138,6 +139,7 @@ function getDefaultModel(provider: AiProvider): string {
     case "openai": return "gpt-4o-mini";
     case "gemini": return "gemini-2.0-flash";
     case "deepseek": return "deepseek-chat";
+    case "anthropic": return "claude-3-5-haiku-20241022";
   }
 }
 
@@ -157,6 +159,11 @@ function getModels(provider: AiProvider): { value: string; label: string }[] {
     case "deepseek": return [
       { value: "deepseek-chat", label: "DeepSeek Chat" },
       { value: "deepseek-reasoner", label: "DeepSeek Reasoner" },
+    ];
+    case "anthropic": return [
+      { value: "claude-3-5-haiku-20241022", label: "Claude 3.5 Haiku" },
+      { value: "claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
+      { value: "claude-opus-4-5", label: "Claude Opus 4.5" },
     ];
   }
 }
@@ -215,6 +222,7 @@ async function callAiKey(provider: AiProvider, apiKey: string, model: string, ms
     case "openai": return callOpenAi(apiKey, model, systemMsg, msgs);
     case "gemini": return callGemini(apiKey, model, systemMsg, msgs);
     case "deepseek": return callDeepSeek(apiKey, model, systemMsg, msgs);
+    case "anthropic": return callAnthropic(apiKey, model, systemMsg, msgs);
   }
 }
 
@@ -262,4 +270,28 @@ async function callDeepSeek(apiKey: string, model: string, systemMsg: string, ms
   }
   const data = await res.json();
   return data.choices?.[0]?.message?.content || "No response";
+}
+
+async function callAnthropic(apiKey: string, model: string, systemMsg: string, msgs: ChatMessage[]): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1024,
+      system: systemMsg,
+      messages: msgs,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.content?.[0]?.text || "No response";
 }
