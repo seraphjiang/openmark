@@ -131,6 +131,12 @@ function createActionsTab(): HTMLElement {
   });
   el.appendChild(copyBtn);
 
+  const copyWordBtn = document.createElement("button");
+  copyWordBtn.className = "action-btn";
+  copyWordBtn.textContent = "Copy for Word/Outlook";
+  copyWordBtn.addEventListener("click", () => copyForWord(copyWordBtn));
+  el.appendChild(copyWordBtn);
+
   return el;
 }
 
@@ -365,9 +371,33 @@ function exportToHtml(): void {
 <title>Exported Markdown</title>
 <style>
 body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; }
-code { font-family: ui-monospace, monospace; background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.875em; }
-pre code { background: none; padding: 0; }
+pre {
+  background: #f6f8fa;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: pre !important;
+  word-wrap: normal !important;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace !important;
+  font-size: 0.875em;
+  line-height: 1.5;
+  display: block;
+  mso-line-height-rule: exactly;
+}
+code {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+  background: #f6f8fa;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  white-space: pre-wrap;
+}
+pre code {
+  background: none;
+  padding: 0;
+  white-space: pre !important;
+  display: block;
+}
 blockquote { border-left: 4px solid #d0d7de; padding: 0.5em 1em; color: #656d76; margin: 1em 0; }
 table { border-collapse: collapse; width: 100%; margin: 1em 0; }
 th, td { border: 1px solid #d0d7de; padding: 0.5em 1em; text-align: left; }
@@ -388,6 +418,94 @@ ${content.innerHTML}
   a.download = getFileName() + ".html";
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Inline all styles on pre/code elements so Word/Outlook renders them
+ * as monospace code blocks instead of bullet lists.
+ */
+function inlineCodeStyles(html: string): string {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");
+  const root = doc.querySelector("div")!;
+
+  // pre blocks — must come before code so pre code is handled correctly
+  root.querySelectorAll("pre").forEach((pre) => {
+    pre.style.cssText = [
+      "background:#f6f8fa",
+      "padding:12px 16px",
+      "border-radius:6px",
+      "font-family:ui-monospace,'Cascadia Code','Source Code Pro',Menlo,Consolas,'DejaVu Sans Mono',monospace",
+      "font-size:13px",
+      "line-height:1.5",
+      "white-space:pre",
+      "word-wrap:normal",
+      "display:block",
+      "margin:1em 0",
+      "border:1px solid #e1e4e8",
+      "overflow:auto",
+      "mso-line-height-rule:exactly",
+    ].join(";");
+    // Remove hljs span colours to keep it clean in Word
+    pre.querySelectorAll("span").forEach((span) => {
+      span.style.cssText = "";
+      span.removeAttribute("class");
+    });
+  });
+
+  // inline code (not inside pre)
+  root.querySelectorAll("code").forEach((code) => {
+    if (code.closest("pre")) {
+      code.style.cssText = [
+        "background:none",
+        "padding:0",
+        "font-family:ui-monospace,'Cascadia Code','Source Code Pro',Menlo,Consolas,'DejaVu Sans Mono',monospace",
+        "font-size:13px",
+        "white-space:pre",
+        "display:block",
+      ].join(";");
+    } else {
+      code.style.cssText = [
+        "background:#f6f8fa",
+        "padding:2px 6px",
+        "border-radius:4px",
+        "font-family:ui-monospace,'Cascadia Code','Source Code Pro',Menlo,Consolas,'DejaVu Sans Mono',monospace",
+        "font-size:0.875em",
+        "white-space:pre-wrap",
+      ].join(";");
+    }
+  });
+
+  return root.innerHTML;
+}
+
+async function copyForWord(btn: HTMLElement): Promise<void> {
+  const content = document.querySelector<HTMLElement>(".openmark-content");
+  if (!content) return;
+
+  const inlined = inlineCodeStyles(content.innerHTML);
+
+  const htmlPayload = [
+    "<!DOCTYPE html><html><head><meta charset='utf-8'></head><body>",
+    inlined,
+    "</body></html>",
+  ].join("");
+
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": new Blob([htmlPayload], { type: "text/html" }),
+        "text/plain": new Blob([content.innerText || content.textContent || ""], { type: "text/plain" }),
+      }),
+    ]);
+    btn.textContent = "Copied!";
+    setTimeout(() => { btn.textContent = "Copy for Word/Outlook"; }, 1800);
+  } catch {
+    // Fallback: plain writeText
+    await navigator.clipboard.writeText(content.innerText || content.textContent || "");
+    btn.textContent = "Copied (plain)";
+    setTimeout(() => { btn.textContent = "Copy for Word/Outlook"; }, 1800);
+  }
 }
 
 function getFileName(): string {
