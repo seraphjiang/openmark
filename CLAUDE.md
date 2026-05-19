@@ -145,3 +145,7 @@ gh release create v0.X.Y openmark-v0.X.Y.zip --title "v0.X.Y" --notes "..."
 **UI**: Add "Upload to Cloud" section in Actions tab with three buttons: Google Drive / OneDrive / SharePoint. Auth token cached in `chrome.storage.local`, refresh on 401.
 
 **CWS note**: Adding `identity` permission requires re-review. Plan for a separate release.
+
+### Ecosystem Projects
+- **openmark-clipper** (`seraphjiang/openmark-clipper`) — Webpage to Markdown clipper, companion to OpenMark
+- **openjson** (`seraphjiang/openjson`) — JSON Viewer/Formatter, free alternative to paid JSON viewers
